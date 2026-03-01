@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>TLMN Tracker • Micro-SaaS</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.10);
+      --text:#eaf0ff; --muted:rgba(234,240,255,.70);
+      --accent:#27c6ff; --danger:#ff5a67; --ok:#34d399;
+      --r:16px; --shadow:0 20px 60px rgba(0,0,0,.45);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    body{ margin:0; background: radial-gradient(1000px 600px at 20% -10%, rgba(39,198,255,.18), transparent 60%),
+                           radial-gradient(1000px 600px at 80% 0%, rgba(168,85,247,.16), transparent 60%),
+                           var(--bg);
+          color:var(--text); }
+    .wrap{ max-width:1100px; margin:28px auto; padding:0 18px; }
+    .top{ display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .brand{ display:flex; gap:10px; align-items:center; }
+    .logo{ width:40px; height:40px; border-radius:12px; background:rgba(39,198,255,.18); border:1px solid var(--stroke); box-shadow:var(--shadow); }
+    h1{ font-size:18px; margin:0; letter-spacing:.3px;}
+    .sub{ font-size:12px; color:var(--muted); margin-top:3px;}
+    .grid{ display:grid; grid-template-columns: 360px 1fr; gap:14px; margin-top:14px; }
+    @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
+    .card{ background:var(--card); border:1px solid var(--stroke); border-radius:var(--r); box-shadow:var(--shadow); }
+    .card .hd{ padding:12px 12px 0 12px; display:flex; justify-content:space-between; align-items:center; }
+    .card .bd{ padding:12px; }
+    .ttl{ font-size:13px; color:var(--muted); }
+    .btn{ cursor:pointer; border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text);
+          padding:9px 12px; border-radius:12px; font-weight:600; }
+    .btn.primary{ background:linear-gradient(135deg, rgba(39,198,255,.18), rgba(168,85,247,.14)); }
+    .btn.danger{ background:rgba(255,90,103,.10); border-color:rgba(255,90,103,.30); }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+    .field label{ font-size:12px; color:var(--muted); }
+    input, select, textarea{
+      border:1px solid var(--stroke); background:rgba(0,0,0,.18); color:var(--text);
+      border-radius:12px; padding:10px 10px; outline:none;
+    }
+    textarea{ min-height:70px; resize:vertical; }
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ padding:10px; border-bottom:1px solid rgba(255,255,255,.08); font-size:13px; }
+    th{ color:var(--muted); font-weight:600; text-align:left; }
+    .pill{ display:inline-flex; padding:4px 9px; border-radius:999px; border:1px solid var(--stroke); font-size:12px; color:var(--muted); }
+    .pos{ color:var(--ok); font-weight:700; }
+    .neg{ color:var(--danger); font-weight:700; }
+    .muted{ color:var(--muted); }
+    .toast{ margin-top:10px; font-size:12px; color:var(--muted); }
+    .hr{ height:1px; background:rgba(255,255,255,.08); margin:12px 0; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>TLMN Tracker</h1>
+        <div class="sub">Micro-SaaS • 4 players • Session / Round / Pig-cut ledger</div>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn" id="btnLoadSessions">Reload</button>
+      <button class="btn primary" id="btnNewSession">New session</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Left: Settings & sessions -->
+    <div class="card">
+      <div class="hd">
+        <div class="ttl">Admin & Sessions</div>
+        <span class="pill" id="pillHealth">offline</span>
+      </div>
+      <div class="bd">
+        <div class="field">
+          <label>API Base</label>
+          <input id="apiBase" placeholder="https://tienlen.testmail12071997.workers.dev" />
+        </div>
+        <div class="field">
+          <label>X-Admin-Token</label>
+          <input id="adminToken" placeholder="secret token" />
+        </div>
+        <div class="row">
+          <button class="btn" id="btnHealth">Health</button>
+          <button class="btn" id="btnSaveLocal">Save</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="ttl">Sessions</div>
+        <div class="field" style="margin-top:10px;">
+          <select id="sessionSelect"></select>
+        </div>
+        <div class="row">
+          <button class="btn" id="btnOpen">Open</button>
+          <button class="btn danger" id="btnEnd">End session</button>
+        </div>
+
+        <div class="toast" id="toastLeft"></div>
+      </div>
+    </div>
+
+    <!-- Right: Session detail -->
+    <div class="card">
+      <div class="hd">
+        <div class="ttl" id="sessionTitle">No session opened</div>
+        <span class="pill" id="sessionMeta">—</span>
+      </div>
+      <div class="bd">
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div>
+            <div class="ttl">Balances</div>
+            <div class="sub muted" id="playersLine"></div>
+          </div>
+          <button class="btn" id="btnRefresh">Refresh</button>
+        </div>
+
+        <div style="margin-top:10px;" id="balancesBox"></div>
+
+        <div class="hr"></div>
+
+        <div class="ttl">Add round</div>
+        <div class="row" style="margin-top:10px;">
+          <div class="field" style="flex:1; min-width:180px;">
+            <label>Nhất</label>
+            <select id="firstPlayer"></select>
+          </div>
+          <div class="field" style="flex:1; min-width:180px;">
+            <label>Nhì</label>
+            <select id="secondPlayer"></select>
+          </div>
+          <div class="field" style="flex:1; min-width:180px;">
+            <label>Bét</label>
+            <select id="lastPlayer"></select>
+          </div>
+        </div>
+
+        <div class="ttl" style="margin-top:6px;">Chặt heo (optional)</div>
+        <div class="row" style="margin-top:10px;">
+          <div class="field" style="flex:1; min-width:200px;">
+            <label>Người chặt</label>
+            <select id="cutCutter"></select>
+          </div>
+          <div class="field" style="flex:1; min-width:200px;">
+            <label>Người bị chặt</label>
+            <select id="cutVictim"></select>
+          </div>
+          <div class="field" style="width:120px;">
+            <label>Số lần</label>
+            <input id="cutQty" type="number" min="1" value="1"/>
+          </div>
+          <div class="field" style="align-self:flex-end;">
+            <button class="btn" id="btnAddCut">Add cut</button>
+          </div>
+        </div>
+
+        <div id="cutsList" class="muted" style="font-size:12px;"></div>
+
+        <div class="field" style="margin-top:10px;">
+          <label>Note</label>
+          <textarea id="roundNote" placeholder="Ghi chú (tuỳ chọn)"></textarea>
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="btnSubmitRound">Submit round</button>
+          <button class="btn" id="btnClearCuts">Clear cuts</button>
+        </div>
+
+        <div class="toast" id="toastRight"></div>
+
+        <div class="hr"></div>
+
+        <div class="ttl">Recent rounds</div>
+        <div style="margin-top:10px;" id="roundsBox" class="muted">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ====== CONFIG ======
+  const LS_KEY = "tlmn_tracker_cfg_v1";
+  const $ = (id)=>document.getElementById(id);
+
+  function fmt(n, currency="VND"){
+    const v = Number(n||0);
+    return v.toLocaleString("vi-VN") + " " + currency;
+  }
+  function toast(el, msg){ el.textContent = msg; }
+
+  function getCfg(){
+    try { return JSON.parse(localStorage.getItem(LS_KEY)||"{}"); } catch { return {}; }
+  }
+  function setCfg(cfg){ localStorage.setItem(LS_KEY, JSON.stringify(cfg)); }
+
+  function apiBase(){ return $("apiBase").value.trim().replace(/\/+$/,""); }
+  function adminToken(){ return $("adminToken").value.trim(); }
+
+  async function api(path, {method="GET", body=null}={}){
+    const url = apiBase() + path;
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Admin-Token": adminToken(),
+    };
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : null,
+    });
+    const data = await res.json().catch(()=>({ok:false,error:"Bad JSON"}));
+    if (!res.ok || data.ok === false) throw new Error(data.error || ("HTTP " + res.status));
+    return data;
+  }
+
+  let currentSessionId = null;
+  let currentSession = null;
+  let pendingCuts = [];
+
+  function setPlayerOptions(players){
+    const selects = ["firstPlayer","secondPlayer","lastPlayer","cutCutter","cutVictim"];
+    for (const id of selects){
+      const sel = $(id);
+      sel.innerHTML = players.map(p=>`<option value="${p}">${p}</option>`).join("");
+    }
+  }
+
+  function renderBalances(balances, players, currency){
+    const rows = players.map(p=>{
+      const b = Number(balances?.[p] || 0);
+      const cls = b >= 0 ? "pos" : "neg";
+      return `<tr><td>${p}</td><td class="${cls}">${fmt(b, currency)}</td></tr>`;
+    }).join("");
+    $("balancesBox").innerHTML = `
+      <table>
+        <thead><tr><th>Player</th><th>Balance</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function renderCuts(){
+    if (!pendingCuts.length){
+      $("cutsList").textContent = "No cuts added.";
+      return;
+    }
+    $("cutsList").innerHTML = pendingCuts.map((c,i)=>
+      `<div>#${i+1} ${c.cutter} chặt ${c.victim} x${c.qty}</div>`
+    ).join("");
+  }
+
+  function renderRounds(rounds){
+    if (!rounds?.length){
+      $("roundsBox").textContent = "—";
+      return;
+    }
+    const lines = rounds.map(r=>{
+      return `<div>#${r.idx} • Nhất: <b>${r.first_player}</b> • Nhì: <b>${r.second_player}</b> • Bét: <b>${r.last_player}</b> <span class="muted">(${new Date(r.created_at).toLocaleString("vi-VN")})</span></div>`;
+    }).join("");
+    $("roundsBox").innerHTML = lines;
+  }
+
+  async function health(){
+    try{
+      const res = await fetch(apiBase()+"/api/health");
+      const data = await res.json();
+      $("pillHealth").textContent = data.ok ? "online" : "offline";
+      $("pillHealth").style.opacity = data.ok ? "1" : ".6";
+    }catch{
+      $("pillHealth").textContent = "offline";
+      $("pillHealth").style.opacity = ".6";
+    }
+  }
+
+  async function loadSessions(){
+    try{
+      const data = await api("/api/sessions");
+      const sel = $("sessionSelect");
+      sel.innerHTML = data.sessions.map(s=>{
+        const ended = s.ended_at ? " (ended)" : "";
+        return `<option value="${s.id}">${s.title}${ended} — ${new Date(s.created_at).toLocaleDateString("vi-VN")}</option>`;
+      }).join("");
+      toast($("toastLeft"), `Loaded ${data.sessions.length} sessions.`);
+    }catch(e){
+      toast($("toastLeft"), "Load sessions failed: " + e.message);
+    }
+  }
+
+  async function openSession(id){
+    try{
+      const data = await api(`/api/sessions/${id}`);
+      currentSessionId = id;
+      currentSession = data.session;
+
+      $("sessionTitle").textContent = currentSession.title;
+      $("sessionMeta").textContent = `${currentSession.currency} • 1st ${fmt(currentSession.first_prize, currentSession.currency)} • 2nd ${fmt(currentSession.second_prize, currentSession.currency)} • cut ${fmt(currentSession.pig_cut_price, currentSession.currency)}`;
+
+      $("playersLine").textContent = "Players: " + currentSession.players.join(" • ");
+      setPlayerOptions(currentSession.players);
+
+      renderBalances(data.balances, currentSession.players, currentSession.currency);
+      renderRounds(data.rounds);
+
+      pendingCuts = [];
+      renderCuts();
+      toast($("toastRight"), currentSession.is_locked ? "Session is locked (ended)." : "Session opened.");
+    }catch(e){
+      toast($("toastRight"), "Open session failed: " + e.message);
+    }
+  }
+
+  async function refreshSession(){
+    if (!currentSessionId) return;
+    await openSession(currentSessionId);
+  }
+
+  async function newSessionFlow(){
+    // prompt nhanh (MVP). Bạn có thể nâng cấp modal sau.
+    const title = prompt("Tên session?", "TLMN - tối nay");
+    if (!title) return;
+
+    const p1 = prompt("Player 1 name?", "A"); if (!p1) return;
+    const p2 = prompt("Player 2 name?", "B"); if (!p2) return;
+    const p3 = prompt("Player 3 name?", "C"); if (!p3) return;
+    const p4 = prompt("Player 4 name?", "D"); if (!p4) return;
+
+    const first_prize = Number(prompt("Giá Nhất (VND)?", "20000")||"0");
+    const second_prize = Number(prompt("Giá Nhì (VND)?", "10000")||"0");
+    const pig_cut_price = Number(prompt("Giá chặt heo (VND)?", "10000")||"0");
+
+    try{
+      const data = await api("/api/sessions", {
+        method:"POST",
+        body:{
+          title, currency:"VND",
+          players:[p1,p2,p3,p4],
+          first_prize, second_prize, pig_cut_price
+        }
+      });
+      toast($("toastLeft"), "Created: " + data.session.id);
+      await loadSessions();
+      $("sessionSelect").value = data.session.id;
+      await openSession(data.session.id);
+    }catch(e){
+      toast($("toastLeft"), "Create session failed: " + e.message);
+    }
+  }
+
+  async function submitRound(){
+    if (!currentSessionId) return toast($("toastRight"), "Open a session first.");
+    if (currentSession?.is_locked) return toast($("toastRight"), "Session ended.");
+
+    const first_player = $("firstPlayer").value;
+    const second_player = $("secondPlayer").value;
+    const last_player = $("lastPlayer").value;
+    const note = $("roundNote").value;
+
+    try{
+      const data = await api(`/api/sessions/${currentSessionId}/rounds`, {
+        method:"POST",
+        body:{ first_player, second_player, last_player, note, cuts: pendingCuts }
+      });
+      toast($("toastRight"), `Round submitted. Updated balances.`);
+      pendingCuts = [];
+      $("roundNote").value = "";
+      renderCuts();
+      await refreshSession();
+    }catch(e){
+      toast($("toastRight"), "Submit failed: " + e.message);
+    }
+  }
+
+  async function endSession(){
+    if (!currentSessionId) return;
+    if (!confirm("End & lock this session?")) return;
+    try{
+      const data = await api(`/api/sessions/${currentSessionId}/end`, { method:"POST" });
+      toast($("toastRight"), "Session ended at " + data.ended_at);
+      await refreshSession();
+      await loadSessions();
+    }catch(e){
+      toast($("toastRight"), "End failed: " + e.message);
+    }
+  }
+
+  // ====== Events ======
+  $("btnSaveLocal").onclick = ()=>{
+    setCfg({ apiBase: $("apiBase").value, adminToken: $("adminToken").value });
+    toast($("toastLeft"), "Saved to localStorage.");
+  };
+  $("btnHealth").onclick = health;
+  $("btnLoadSessions").onclick = loadSessions;
+  $("btnNewSession").onclick = newSessionFlow;
+  $("btnOpen").onclick = ()=>openSession($("sessionSelect").value);
+  $("btnRefresh").onclick = refreshSession;
+  $("btnSubmitRound").onclick = submitRound;
+  $("btnEnd").onclick = endSession;
+
+  $("btnAddCut").onclick = ()=>{
+    const cutter = $("cutCutter").value;
+    const victim = $("cutVictim").value;
+    const qty = Math.max(1, Number($("cutQty").value || 1) | 0);
+    if (cutter === victim) return toast($("toastRight"), "Cutter and victim must differ.");
+    pendingCuts.push({ cutter, victim, qty });
+    renderCuts();
+  };
+  $("btnClearCuts").onclick = ()=>{
+    pendingCuts = [];
+    renderCuts();
+  };
+
+  // ====== Init ======
+  (function init(){
+    const cfg = getCfg();
+    $("apiBase").value = cfg.apiBase || "https://YOUR_WORKER_DOMAIN.workers.dev";
+    $("adminToken").value = cfg.adminToken || "";
+    renderCuts();
+    health();
+  })();
+</script>
+</body>
+</html>
