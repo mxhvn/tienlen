@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>TLMN Tracker • Micro-SaaS</title>
+  <title>TLMN Tracker • Fixed Rules</title>
   <style>
     :root{
       --bg:#0b1220; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.10);
       --text:#eaf0ff; --muted:rgba(234,240,255,.70);
-      --accent:#27c6ff; --danger:#ff5a67; --ok:#34d399;
+      --danger:#ff5a67; --ok:#34d399;
       --r:16px; --shadow:0 20px 60px rgba(0,0,0,.45);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
@@ -51,11 +51,6 @@
     .muted{ color:var(--muted); }
     .toast{ margin-top:10px; font-size:12px; color:var(--muted); }
     .hr{ height:1px; background:rgba(255,255,255,.08); margin:12px 0; }
-    .kpi{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:10px; }
-    @media (max-width: 980px){ .kpi{ grid-template-columns: repeat(2, 1fr); } }
-    .kpi .box{ padding:10px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:rgba(0,0,0,.12); }
-    .kpi .box .n{ font-size:12px; color:var(--muted); }
-    .kpi .box .v{ margin-top:6px; font-size:14px; font-weight:800; }
     .settle-item{ display:flex; justify-content:space-between; gap:10px; padding:10px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:rgba(0,0,0,.12); }
     .settle-item b{ white-space:nowrap; }
   </style>
@@ -67,7 +62,7 @@
       <div class="logo"></div>
       <div>
         <h1>TLMN Tracker</h1>
-        <div class="sub">Micro-SaaS • 4 players • Session / Round / Pig-cut ledger</div>
+        <div class="sub">Fixed Rules • 4 players • Round ledger</div>
       </div>
     </div>
     <div class="row">
@@ -84,7 +79,7 @@
         <span class="pill" id="pillHealth">offline</span>
       </div>
       <div class="bd">
-        <div class="ttl">Select</div>
+        <div class="ttl" id="ruleLine">Rules: —</div>
         <div class="field" style="margin-top:10px;">
           <select id="sessionSelect"></select>
         </div>
@@ -93,11 +88,6 @@
           <button class="btn danger" id="btnEnd">End session</button>
         </div>
         <div class="toast" id="toastLeft"></div>
-
-        <div class="hr"></div>
-
-        <div class="ttl">Quick info</div>
-        <div class="kpi" id="kpiBox"></div>
       </div>
     </div>
 
@@ -140,12 +130,12 @@
             <select id="thirdPlayer"></select>
           </div>
           <div class="field" style="flex:1; min-width:160px;">
-            <label>Bét</label>
+            <label>Chót</label>
             <select id="lastPlayer"></select>
           </div>
         </div>
 
-        <div class="ttl" style="margin-top:6px;">Chặt heo (optional)</div>
+        <div class="ttl" style="margin-top:6px;">Chặt heo (optional) • BLACK=10k • RED=20k</div>
         <div class="row" style="margin-top:10px;">
           <div class="field" style="flex:1; min-width:200px;">
             <label>Người chặt</label>
@@ -154,6 +144,13 @@
           <div class="field" style="flex:1; min-width:200px;">
             <label>Người bị chặt</label>
             <select id="cutVictim"></select>
+          </div>
+          <div class="field" style="width:150px;">
+            <label>Màu heo</label>
+            <select id="cutColor">
+              <option value="BLACK">Heo đen (10k)</option>
+              <option value="RED">Heo đỏ (20k)</option>
+            </select>
           </div>
           <div class="field" style="width:120px;">
             <label>Số lần</label>
@@ -188,7 +185,7 @@
 </div>
 
 <script>
-  // ✅ HARD-CODED for quick test
+  // ✅ HARD-CODED
   const API_BASE = "https://tienlen.testmail12071997.workers.dev";
   const ADMIN_TOKEN = "test";
 
@@ -201,10 +198,7 @@
 
   async function api(path, {method="GET", body=null}={}){
     const url = API_BASE + path;
-    const headers = {
-      "Content-Type":"application/json",
-      "X-Admin-Token": ADMIN_TOKEN,
-    };
+    const headers = { "Content-Type":"application/json", "X-Admin-Token": ADMIN_TOKEN };
     const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
     const data = await res.json().catch(()=>({ok:false,error:"Bad JSON"}));
     if (!res.ok || data.ok === false) throw new Error(data.error || ("HTTP " + res.status));
@@ -214,6 +208,7 @@
   let currentSessionId = null;
   let currentSession = null;
   let pendingCuts = [];
+  let currentRules = { third_to_second: 10000, last_to_first: 20000, currency:"VND" };
 
   function setPlayerOptions(players){
     const selects = ["firstPlayer","secondPlayer","thirdPlayer","lastPlayer","cutCutter","cutVictim"];
@@ -221,7 +216,6 @@
       const sel = $(id);
       sel.innerHTML = players.map(p=>`<option value="${p}">${p}</option>`).join("");
     }
-    // auto distinct defaults
     if (players.length === 4){
       $("firstPlayer").value = players[0];
       $("secondPlayer").value = players[1];
@@ -255,41 +249,31 @@
   }
 
   function renderRounds(rounds){
-    if (!rounds?.length){
-      $("roundsBox").textContent = "—";
-      return;
-    }
-    const lines = rounds.map(r=>{
+    if (!rounds?.length){ $("roundsBox").textContent = "—"; return; }
+    $("roundsBox").innerHTML = rounds.map(r=>{
       const t = new Date(r.created_at).toLocaleString("vi-VN");
-      return `<div>#${r.idx} • Nhất: <b>${r.first_player}</b> • Nhì: <b>${r.second_player}</b> • Về3: <b>${r.third_player}</b> • Bét: <b>${r.last_player}</b> <span class="muted">(${t})</span></div>`;
+      return `<div>#${r.idx} • Nhất: <b>${r.first_player}</b> • Nhì: <b>${r.second_player}</b> • Về3: <b>${r.third_player}</b> • Chót: <b>${r.last_player}</b> <span class="muted">(${t})</span></div>`;
     }).join("");
-    $("roundsBox").innerHTML = lines;
   }
 
   function renderCuts(){
-    if (!pendingCuts.length){
-      $("cutsList").textContent = "No cuts added.";
-      return;
-    }
+    if (!pendingCuts.length){ $("cutsList").textContent = "No cuts added."; return; }
     $("cutsList").innerHTML = pendingCuts.map((c,i)=>
-      `<div>#${i+1} ${c.cutter} chặt ${c.victim} x${c.qty}</div>`
+      `<div>#${i+1} ${c.cutter} chặt ${c.victim} • ${c.color} x${c.qty}</div>`
     ).join("");
   }
 
-  function renderKpi(session, balances){
-    if (!session){
-      $("kpiBox").innerHTML = "";
-      return;
+  function validateDistinctRanks(){
+    if (!currentSession) return true;
+    const a = $("firstPlayer").value;
+    const b = $("secondPlayer").value;
+    const c = $("thirdPlayer").value;
+    const d = $("lastPlayer").value;
+    if (new Set([a,b,c,d]).size !== 4){
+      toast($("toastRight"), "⚠️ Nhất/Nhì/Về3/Chót phải là 4 người khác nhau.");
+      return false;
     }
-    const b = session.players.map(p => ({ p, v: Number(balances?.[p]||0) }));
-    b.sort((a,b)=>b.v-a.v);
-    const top = b[0], bot = b[b.length-1];
-    $("kpiBox").innerHTML = `
-      <div class="box"><div class="n">Session</div><div class="v">${session.title}</div></div>
-      <div class="box"><div class="n">Top</div><div class="v pos">${top.p}: ${fmt(top.v, session.currency)}</div></div>
-      <div class="box"><div class="n">Bottom</div><div class="v neg">${bot.p}: ${fmt(bot.v, session.currency)}</div></div>
-      <div class="box"><div class="n">Pricing</div><div class="v">${fmt(session.first_prize, session.currency)} / ${fmt(session.second_prize, session.currency)} / cut ${fmt(session.pig_cut_price, session.currency)}</div></div>
-    `;
+    return true;
   }
 
   async function health(){
@@ -304,9 +288,17 @@
     }
   }
 
+  function renderRuleLine(rules){
+    const cur = rules?.currency || "VND";
+    $("ruleLine").textContent = `Rules: Về 3 → Nhì ${fmt(rules.third_to_second, cur)} | Chót → Nhất ${fmt(rules.last_to_first, cur)}`;
+  }
+
   async function loadSessions(){
     try{
       const data = await api("/api/sessions");
+      if (data.rules) currentRules = data.rules;
+      renderRuleLine(currentRules);
+
       const sel = $("sessionSelect");
       sel.innerHTML = data.sessions.map(s=>{
         const ended = s.ended_at ? " (ended)" : "";
@@ -323,10 +315,12 @@
       const data = await api(`/api/sessions/${id}`);
       currentSessionId = id;
       currentSession = data.session;
+      if (data.rules) currentRules = data.rules;
+
+      renderRuleLine(currentRules);
 
       $("sessionTitle").textContent = currentSession.title;
-      $("sessionMeta").textContent =
-        `${currentSession.currency} • 1st ${fmt(currentSession.first_prize, currentSession.currency)} • 2nd ${fmt(currentSession.second_prize, currentSession.currency)} • cut ${fmt(currentSession.pig_cut_price, currentSession.currency)}`;
+      $("sessionMeta").textContent = `Fixed rules • ${currentSession.currency}`;
 
       $("playersLine").textContent = "Players: " + currentSession.players.join(" • ");
       setPlayerOptions(currentSession.players);
@@ -334,7 +328,6 @@
       renderBalances(data.balances, currentSession.players, currentSession.currency);
       renderSettlement(data.settlement, currentSession.currency);
       renderRounds(data.rounds);
-      renderKpi(currentSession, data.balances);
 
       pendingCuts = [];
       renderCuts();
@@ -359,14 +352,10 @@
     const p3 = prompt("Player 3 name?", "C"); if (!p3) return;
     const p4 = prompt("Player 4 name?", "D"); if (!p4) return;
 
-    const first_prize = Number(prompt("Giá Nhất (VND)?", "20000")||"0");
-    const second_prize = Number(prompt("Giá Nhì (VND)?", "10000")||"0");
-    const pig_cut_price = Number(prompt("Giá chặt heo (VND)?", "10000")||"0");
-
     try{
       const data = await api("/api/sessions", {
         method:"POST",
-        body:{ title, currency:"VND", players:[p1,p2,p3,p4], first_prize, second_prize, pig_cut_price }
+        body:{ title, currency:"VND", players:[p1,p2,p3,p4] }
       });
       toast($("toastLeft"), "Created: " + data.session.id);
       await loadSessions();
@@ -377,24 +366,9 @@
     }
   }
 
-  function validateDistinctRanks(){
-    if (!currentSession) return true;
-    const a = $("firstPlayer").value;
-    const b = $("secondPlayer").value;
-    const c = $("thirdPlayer").value;
-    const d = $("lastPlayer").value;
-    const set = new Set([a,b,c,d]);
-    if (set.size !== 4){
-      toast($("toastRight"), "⚠️ Nhất/Nhì/Về3/Bét phải là 4 người khác nhau.");
-      return false;
-    }
-    return true;
-  }
-
   async function submitRound(){
     if (!currentSessionId) return toast($("toastRight"), "Open a session first.");
     if (currentSession?.is_locked) return toast($("toastRight"), "Session ended.");
-
     if (!validateDistinctRanks()) return;
 
     const first_player = $("firstPlayer").value;
@@ -431,7 +405,7 @@
     }
   }
 
-  // ====== Events ======
+  // Events
   $("btnReload").onclick = async ()=>{ await health(); await loadSessions(); };
   $("btnNewSession").onclick = newSessionFlow;
   $("btnOpen").onclick = ()=>openSession($("sessionSelect").value);
@@ -443,21 +417,20 @@
     if (!currentSession) return toast($("toastRight"), "Open a session first.");
     const cutter = $("cutCutter").value;
     const victim = $("cutVictim").value;
+    const color = $("cutColor").value;
     const qty = Math.max(1, Number($("cutQty").value || 1) | 0);
     if (cutter === victim) return toast($("toastRight"), "Cutter and victim must differ.");
-    pendingCuts.push({ cutter, victim, qty });
+    pendingCuts.push({ cutter, victim, color, qty });
     renderCuts();
   };
-  $("btnClearCuts").onclick = ()=>{
-    pendingCuts = [];
-    renderCuts();
-  };
+  $("btnClearCuts").onclick = ()=>{ pendingCuts = []; renderCuts(); };
 
-  // ====== Init ======
+  // Init
   (async function init(){
     renderCuts();
     await health();
     await loadSessions();
+    renderRuleLine(currentRules);
   })();
 </script>
 </body>
