@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>TLMN Tracker • Fixed Rules</title>
+  <title>TLMN Tracker • Public</title>
   <style>
     :root{
       --bg:#0b1220; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.10);
@@ -62,7 +62,7 @@
       <div class="logo"></div>
       <div>
         <h1>TLMN Tracker</h1>
-        <div class="sub">Fixed Rules • 4 players • Round ledger</div>
+        <div class="sub">Public • No token • Fixed rules</div>
       </div>
     </div>
     <div class="row">
@@ -72,7 +72,6 @@
   </div>
 
   <div class="grid">
-    <!-- Left -->
     <div class="card">
       <div class="hd">
         <div class="ttl">Sessions</div>
@@ -91,7 +90,6 @@
       </div>
     </div>
 
-    <!-- Right -->
     <div class="card">
       <div class="hd">
         <div class="ttl" id="sessionTitle">No session opened</div>
@@ -185,9 +183,7 @@
 </div>
 
 <script>
-  // ✅ HARD-CODED
   const API_BASE = "https://tienlen.testmail12071997.workers.dev";
-  const ADMIN_TOKEN = "test";
 
   const $ = (id)=>document.getElementById(id);
   function toast(el, msg){ el.textContent = msg; }
@@ -198,7 +194,7 @@
 
   async function api(path, {method="GET", body=null}={}){
     const url = API_BASE + path;
-    const headers = { "Content-Type":"application/json", "X-Admin-Token": ADMIN_TOKEN };
+    const headers = { "Content-Type":"application/json" };
     const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
     const data = await res.json().catch(()=>({ok:false,error:"Bad JSON"}));
     if (!res.ok || data.ok === false) throw new Error(data.error || ("HTTP " + res.status));
@@ -208,7 +204,7 @@
   let currentSessionId = null;
   let currentSession = null;
   let pendingCuts = [];
-  let currentRules = { third_to_second: 10000, last_to_first: 20000, currency:"VND" };
+  let currentRules = null;
 
   function setPlayerOptions(players){
     const selects = ["firstPlayer","secondPlayer","thirdPlayer","lastPlayer","cutCutter","cutVictim"];
@@ -222,6 +218,12 @@
       $("thirdPlayer").value = players[2];
       $("lastPlayer").value = players[3];
     }
+  }
+
+  function renderRuleLine(rules){
+    if (!rules) { $("ruleLine").textContent = "Rules: —"; return; }
+    $("ruleLine").textContent =
+      `Rules: Về 3 → Nhì ${fmt(rules.third_to_second, rules.currency)} | Chót → Nhất ${fmt(rules.last_to_first, rules.currency)} | Heo đen ${fmt(rules.pig_black, rules.currency)} | Heo đỏ ${fmt(rules.pig_red, rules.currency)}`;
   }
 
   function renderBalances(balances, players, currency){
@@ -288,15 +290,10 @@
     }
   }
 
-  function renderRuleLine(rules){
-    const cur = rules?.currency || "VND";
-    $("ruleLine").textContent = `Rules: Về 3 → Nhì ${fmt(rules.third_to_second, cur)} | Chót → Nhất ${fmt(rules.last_to_first, cur)}`;
-  }
-
   async function loadSessions(){
     try{
       const data = await api("/api/sessions");
-      if (data.rules) currentRules = data.rules;
+      currentRules = data.rules;
       renderRuleLine(currentRules);
 
       const sel = $("sessionSelect");
@@ -315,12 +312,11 @@
       const data = await api(`/api/sessions/${id}`);
       currentSessionId = id;
       currentSession = data.session;
-      if (data.rules) currentRules = data.rules;
-
+      currentRules = data.rules || currentRules;
       renderRuleLine(currentRules);
 
       $("sessionTitle").textContent = currentSession.title;
-      $("sessionMeta").textContent = `Fixed rules • ${currentSession.currency}`;
+      $("sessionMeta").textContent = `Public • ${currentSession.currency}`;
 
       $("playersLine").textContent = "Players: " + currentSession.players.join(" • ");
       setPlayerOptions(currentSession.players);
@@ -430,7 +426,6 @@
     renderCuts();
     await health();
     await loadSessions();
-    renderRuleLine(currentRules);
   })();
 </script>
 </body>
