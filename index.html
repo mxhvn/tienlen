@@ -1,328 +1,356 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Tiến Lên Tracker</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tiến Lên Tracker (Mobile)</title>
 
 <style>
-
-body{
-font-family:system-ui;
-background:#0f172a;
-color:white;
-margin:0;
-padding:12px;
-}
-
-h2{
-margin:10px 0;
-}
-
-.card{
-background:#1e293b;
-padding:14px;
-border-radius:10px;
-margin-bottom:12px;
-}
-
-input,button{
-width:100%;
-padding:12px;
-margin-top:6px;
-border-radius:8px;
-border:none;
-font-size:16px;
-}
-
-button{
-background:#22c55e;
-color:white;
-}
-
-.playerbtn{
-background:#334155;
-margin:4px 0;
-}
-
-.row{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:6px;
-}
-
-.score{
-display:flex;
-justify-content:space-between;
-padding:6px 0;
-border-bottom:1px solid #334155;
-}
-
-.pos{color:#22c55e}
-.neg{color:#ef4444}
-
-.round{
-font-size:14px;
-border-bottom:1px solid #334155;
-padding:6px 0;
-}
-
+  :root{
+    --bg:#0f172a;
+    --card:#1e293b;
+    --muted:#94a3b8;
+    --btn:#334155;
+    --btn2:#22c55e;
+    --danger:#ef4444;
+    --active:#38bdf8;
+    --activeBg: rgba(56,189,248,.18);
+  }
+  body{font-family:system-ui;background:var(--bg);color:#fff;margin:0;padding:12px;}
+  h2{margin:6px 0 12px 0;font-size:18px;}
+  .card{background:var(--card);padding:14px;border-radius:12px;margin-bottom:12px;}
+  .muted{color:var(--muted);font-size:12px}
+  input,button{width:100%;padding:12px;margin-top:8px;border-radius:10px;border:none;font-size:16px;}
+  button{background:var(--btn2);color:#fff;font-weight:700;cursor:pointer}
+  button.secondary{background:var(--btn);}
+  button.danger{background:var(--danger);}
+  .btnRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .playerGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .pbtn{
+    background:var(--btn); color:#fff; padding:12px; border-radius:10px;
+    border:1px solid rgba(255,255,255,.10);
+    font-weight:800;
+  }
+  .pbtn.active{
+    border-color: rgba(56,189,248,.9);
+    background: var(--activeBg);
+    box-shadow: 0 0 0 2px rgba(56,189,248,.25) inset;
+  }
+  .score{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.10);}
+  .pos{color:#22c55e;font-weight:900}
+  .neg{color:#ef4444;font-weight:900}
+  .round{font-size:13px;border-bottom:1px solid rgba(255,255,255,.10);padding:8px 0;line-height:1.4}
+  .toast{margin-top:8px;font-size:13px}
+  .toast.ok{color:#22c55e}
+  .toast.err{color:#ef4444}
+  .pill{
+    display:inline-block;
+    padding:4px 10px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:999px;
+    font-size:12px;
+    color:var(--muted);
+    margin-top:6px;
+  }
 </style>
 </head>
 
 <body>
 
 <h2>🃏 Tiến Lên Tracker</h2>
+<div class="muted">Worker: <span class="pill" id="apiPill"></span></div>
 
 <div class="card">
+  <b>Tạo bàn</b>
+  <div class="muted">Nhập 4 tên khác nhau</div>
 
-<b>Tạo bàn</b>
+  <input id="p1" placeholder="Player A" />
+  <input id="p2" placeholder="Player B" />
+  <input id="p3" placeholder="Player C" />
+  <input id="p4" placeholder="Player D" />
 
-<input id="p1" placeholder="Player A">
-<input id="p2" placeholder="Player B">
-<input id="p3" placeholder="Player C">
-<input id="p4" placeholder="Player D">
-
-<button onclick="createSession()">Create</button>
-
+  <button onclick="createSession()">Create</button>
+  <div id="toastCreate" class="toast"></div>
 </div>
 
 <div class="card">
-
-<b>Chọn bàn</b>
-<div id="sessions"></div>
-
+  <b>Chọn bàn</b>
+  <div id="sessions" style="margin-top:10px;"></div>
+  <div id="toastSessions" class="toast"></div>
 </div>
 
 <div id="game" style="display:none">
 
-<div class="card">
+  <div class="card">
+    <b>Kết quả ván (NORMAL)</b>
+    <div class="muted">Tap để chọn • bắt buộc đủ 4 hạng và không trùng người</div>
 
-<b>Kết quả ván</b>
+    <div style="margin-top:10px"><b>Nhất</b></div>
+    <div id="first" class="playerGrid"></div>
 
-<label>Nhất</label>
-<div id="first"></div>
+    <div style="margin-top:10px"><b>Nhì</b></div>
+    <div id="second" class="playerGrid"></div>
 
-<label>Nhì</label>
-<div id="second"></div>
+    <div style="margin-top:10px"><b>Ba</b></div>
+    <div id="third" class="playerGrid"></div>
 
-<label>Ba</label>
-<div id="third"></div>
+    <div style="margin-top:10px"><b>Bét</b></div>
+    <div id="last" class="playerGrid"></div>
 
-<label>Bét</label>
-<div id="last"></div>
+    <div class="btnRow">
+      <button onclick="submitRound()">Lưu ván</button>
+      <button class="secondary" onclick="resetRoundPick()">Reset chọn</button>
+    </div>
 
-<button onclick="submitRound()">Lưu ván</button>
+    <div id="toastRound" class="toast"></div>
+  </div>
 
-</div>
+  <div class="card">
+    <b>🐷 Chặt heo</b>
+    <div class="muted">Chọn người chặt + người bị chặt, rồi bấm x1/x2</div>
 
-<div class="card">
+    <div style="margin-top:10px"><b>Người chặt</b></div>
+    <div id="cutCutter" class="playerGrid"></div>
 
-<b>🐷 Chặt heo</b>
+    <div style="margin-top:10px"><b>Người bị chặt</b></div>
+    <div id="cutVictim" class="playerGrid"></div>
 
-<label>Người chặt</label>
-<div id="cutCutter"></div>
+    <div class="btnRow">
+      <button class="secondary" onclick="cut(1)">🐷 x1</button>
+      <button class="secondary" onclick="cut(2)">🐷 x2</button>
+    </div>
 
-<label>Người bị chặt</label>
-<div id="cutVictim"></div>
+    <div id="toastCut" class="toast"></div>
+  </div>
 
-<div class="row">
-<button onclick="cut(1)">🐷 x1</button>
-<button onclick="cut(2)">🐷 x2</button>
-</div>
+  <div class="card">
+    <b>Scoreboard</b>
+    <div id="scores" style="margin-top:10px;"></div>
+  </div>
 
-</div>
-
-<div class="card">
-
-<b>Scoreboard</b>
-<div id="scores"></div>
-
-</div>
-
-<div class="card">
-
-<b>History</b>
-<div id="rounds"></div>
-
-</div>
+  <div class="card">
+    <b>History</b>
+    <div id="rounds" style="margin-top:10px;"></div>
+  </div>
 
 </div>
 
 <script>
+const API = "https://tienlen.testmail12071997.workers.dev";
+document.getElementById("apiPill").textContent = API.replace(/^https?:\/\//,"");
 
-const API="https://tienlen.testmail12071997.workers.dev"
+let sessionId = null;
+let players = [];
 
-let session=null
-let players=[]
-let roundData={}
+// state tách riêng để tránh lẫn lộn
+let rankPick = { first:null, second:null, third:null, last:null };
+let cutPick  = { cutter:null, victim:null };
 
-const $=id=>document.getElementById(id)
+const $ = id => document.getElementById(id);
 
-function fmt(n){
-return n.toLocaleString()+"đ"
+function setToast(id, msg, ok=true){
+  const el = $(id);
+  el.className = "toast " + (ok ? "ok" : "err");
+  el.textContent = msg || "";
+}
+
+function fmt(n){ return (Number(n||0)).toLocaleString("vi-VN") + "đ"; }
+
+async function fetchJSON(url, opts){
+  const res = await fetch(url, opts);
+  let data = null;
+  try { data = await res.json(); } catch {}
+  if (!res.ok || (data && data.ok === false)) {
+    const msg = (data && data.error) ? data.error : ("HTTP " + res.status);
+    throw new Error(msg);
+  }
+  return data;
+}
+
+function uniqNonNull(arr){
+  const a = arr.filter(Boolean);
+  return new Set(a).size === a.length;
+}
+
+function renderPick(targetId, key, currentValue, onPick){
+  $(targetId).innerHTML = players.map(p=>{
+    const active = (p === currentValue) ? "active" : "";
+    return `<button class="pbtn ${active}" onclick="${onPick}('${key}','${p}')">${p}</button>`;
+  }).join("");
+}
+
+function renderAllPickUI(){
+  renderPick("first",  "first",  rankPick.first,  "pickRank");
+  renderPick("second", "second", rankPick.second, "pickRank");
+  renderPick("third",  "third",  rankPick.third,  "pickRank");
+  renderPick("last",   "last",   rankPick.last,   "pickRank");
+
+  renderPick("cutCutter","cutter",cutPick.cutter,"pickCut");
+  renderPick("cutVictim","victim",cutPick.victim,"pickCut");
+}
+
+window.pickRank = (k,v)=>{
+  rankPick[k] = v;
+  renderAllPickUI();
+};
+
+window.pickCut = (k,v)=>{
+  cutPick[k] = v;
+  renderAllPickUI();
+};
+
+function resetRoundPick(){
+  rankPick = { first:null, second:null, third:null, last:null };
+  setToast("toastRound","");
+  renderAllPickUI();
 }
 
 async function createSession(){
+  try{
+    setToast("toastCreate","",true);
+    const p = [p1.value, p2.value, p3.value, p4.value].map(s=>(s||"").trim()).filter(Boolean);
+    if (p.length !== 4) return setToast("toastCreate","Nhập đủ 4 tên.",false);
+    if (new Set(p).size !== 4) return setToast("toastCreate","4 tên phải khác nhau.",false);
 
-const p=[p1.value,p2.value,p3.value,p4.value]
+    await fetchJSON(API + "/session", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ players: p })
+    });
 
-await fetch(API+"/session",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({players:p})
-})
-
-loadSessions()
-
+    setToast("toastCreate","✅ Created. Loading sessions...",true);
+    await loadSessions();
+  }catch(e){
+    setToast("toastCreate","Create session failed: " + e.message,false);
+  }
 }
 
 async function loadSessions(){
+  try{
+    const data = await fetchJSON(API + "/sessions");
+    const list = data.sessions || [];
 
-const r=await fetch(API+"/sessions")
-const data=await r.json()
+    $("sessions").innerHTML = list.map(s => `
+      <button class="pbtn" onclick="openSession('${s.id}')">
+        ${s.players.join(" vs ")}
+      </button>
+    `).join("") || `<div class="muted">Chưa có session nào. Hãy tạo bàn.</div>`;
 
-sessions.innerHTML=data.sessions.map(s=>
-
-`<button class="playerbtn"
-onclick="openSession('${s.id}')">
-
-${s.players.join(" vs ")}
-
-</button>`
-
-).join("")
-
+    setToast("toastSessions", `✅ Loaded ${list.length} sessions`, true);
+  }catch(e){
+    $("sessions").innerHTML = "";
+    setToast("toastSessions","Load sessions failed: " + e.message,false);
+  }
 }
 
 async function openSession(id){
+  try{
+    sessionId = id;
+    $("game").style.display = "block";
 
-session=id
+    const data = await fetchJSON(API + "/session/" + id);
+    players = data.session.players || [];
 
-game.style.display="block"
+    // reset pick mỗi lần mở bàn để tránh dùng giá trị cũ gây 400
+    rankPick = { first:null, second:null, third:null, last:null };
+    cutPick  = { cutter:null, victim:null };
 
-const r=await fetch(API+"/session/"+id)
-const data=await r.json()
+    renderAllPickUI();
+    renderScores(data.balances || {});
+    renderRounds(data.rounds || []);
 
-players=data.session.players
-
-renderPlayers()
-
-renderScores(data.balances)
-
-renderRounds(data.rounds)
-
-}
-
-function renderPlayers(){
-
-function buttons(target,key){
-
-$(target).innerHTML=players.map(p=>
-
-`<button class="playerbtn"
-onclick="set('${key}','${p}')">
-
-${p}
-
-</button>`
-
-).join("")
-
-}
-
-buttons("first","first")
-buttons("second","second")
-buttons("third","third")
-buttons("last","last")
-
-buttons("cutCutter","cutter")
-buttons("cutVictim","victim")
-
-}
-
-function set(k,v){
-
-roundData[k]=v
-
-}
-
-async function submitRound(){
-
-await fetch(API+"/session/"+session+"/round",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify(roundData)
-})
-
-roundData={}
-
-openSession(session)
-
-}
-
-async function cut(qty){
-
-await fetch(API+"/session/"+session+"/cut",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-
-cutter:roundData.cutter,
-victim:roundData.victim,
-qty
-
-})
-})
-
-openSession(session)
-
+    setToast("toastRound","",true);
+    setToast("toastCut","",true);
+  }catch(e){
+    setToast("toastSessions","Open session failed: " + e.message,false);
+  }
 }
 
 function renderScores(bal){
-
-scores.innerHTML=Object.entries(bal).map(([p,v])=>
-
-`<div class="score">
-
-<span>${p}</span>
-
-<span class="${v>=0?"pos":"neg"}">
-
-${fmt(v)}
-
-</span>
-
-</div>`
-
-).join("")
-
+  const entries = Object.entries(bal || {});
+  if (!entries.length) {
+    $("scores").innerHTML = `<div class="muted">Chưa có dữ liệu.</div>`;
+    return;
+  }
+  // sort desc by net
+  entries.sort((a,b)=>Number(b[1])-Number(a[1]));
+  $("scores").innerHTML = entries.map(([p,v]) => `
+    <div class="score">
+      <span><b>${p}</b></span>
+      <span class="${Number(v)>=0?"pos":"neg"}">${fmt(v)}</span>
+    </div>
+  `).join("");
 }
 
 function renderRounds(r){
-
-rounds.innerHTML=r.map(i=>
-
-`<div class="round">
-
-#${i.idx}
-${i.first_player}
->
-${i.second_player}
->
-${i.third_player}
->
-${i.last_player}
-
-</div>`
-
-).join("")
-
+  if (!Array.isArray(r) || !r.length) {
+    $("rounds").innerHTML = `<div class="muted">Chưa có ván nào.</div>`;
+    return;
+  }
+  // rounds are returned newest-first in worker v2
+  $("rounds").innerHTML = r.slice(0, 60).map(i => `
+    <div class="round">
+      <b>#${i.idx}</b> ${i.mode || "NORMAL"}<br/>
+      ${i.first_player ? `Nhất: <b>${i.first_player}</b>` : "" }
+      ${i.second_player ? ` • Nhì: <b>${i.second_player}</b>` : "" }
+      ${i.third_player ? ` • Ba: <b>${i.third_player}</b>` : "" }
+      ${i.last_player ? ` • Bét: <b>${i.last_player}</b>` : "" }
+      ${i.white_winner ? `<br/>⭐ Trắng: <b>${i.white_winner}</b>` : "" }
+    </div>
+  `).join("");
 }
 
-loadSessions()
+async function submitRound(){
+  if (!sessionId) return setToast("toastRound","Chưa chọn session.",false);
 
+  const a = rankPick.first, b = rankPick.second, c = rankPick.third, d = rankPick.last;
+  if (!a || !b || !c || !d) return setToast("toastRound","Chọn đủ Nhất/Nhì/Ba/Bét.",false);
+  if (!uniqNonNull([a,b,c,d])) return setToast("toastRound","4 hạng phải là 4 người khác nhau.",false);
+
+  try{
+    setToast("toastRound","Đang lưu...",true);
+
+    await fetchJSON(API + `/session/${sessionId}/round`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        first: a, second: b, third: c, last: d
+      })
+    });
+
+    setToast("toastRound","✅ Đã lưu ván.",true);
+    await openSession(sessionId);
+  }catch(e){
+    setToast("toastRound","Save round failed: " + e.message,false);
+  }
+}
+
+async function cut(qty){
+  if (!sessionId) return setToast("toastCut","Chưa chọn session.",false);
+  if (!cutPick.cutter || !cutPick.victim) return setToast("toastCut","Chọn người chặt và người bị chặt.",false);
+  if (cutPick.cutter === cutPick.victim) return setToast("toastCut","Người chặt và bị chặt phải khác nhau.",false);
+
+  try{
+    setToast("toastCut","Đang ghi chặt heo...",true);
+
+    await fetchJSON(API + `/session/${sessionId}/cut`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        cutter: cutPick.cutter,
+        victim: cutPick.victim,
+        qty: qty
+      })
+    });
+
+    setToast("toastCut",`✅ Đã ghi chặt heo x${qty}.`,true);
+    await openSession(sessionId);
+  }catch(e){
+    setToast("toastCut","Cut failed: " + e.message,false);
+  }
+}
+
+loadSessions();
 </script>
 
 </body>
