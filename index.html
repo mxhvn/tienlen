@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>TLMN Tournament Tracker • Pro</title>
+  <title>TLMN Tournament Tracker • Pro v4</title>
   <style>
     :root{
       --bg:#0b1220; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.10);
       --text:#eaf0ff; --muted:rgba(234,240,255,.70);
-      --danger:#ff5a67; --ok:#34d399;
+      --danger:#ff5a67; --ok:#34d399; --warn:#facc15;
       --r:16px; --shadow:0 20px 60px rgba(0,0,0,.45);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
@@ -23,42 +23,73 @@
     .logo{ width:40px; height:40px; border-radius:12px; background:rgba(39,198,255,.18); border:1px solid var(--stroke); box-shadow:var(--shadow); }
     h1{ font-size:18px; margin:0; letter-spacing:.3px;}
     .sub{ font-size:12px; color:var(--muted); margin-top:3px;}
-    .grid{ display:grid; grid-template-columns: 410px 1fr; gap:14px; margin-top:14px; }
+    .grid{ display:grid; grid-template-columns: 420px 1fr; gap:14px; margin-top:14px; }
     @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
+
     .card{ background:var(--card); border:1px solid var(--stroke); border-radius:var(--r); box-shadow:var(--shadow); }
     .card .hd{ padding:12px 12px 0 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
     .card .bd{ padding:12px; }
+
     .ttl{ font-size:13px; color:var(--muted); }
-    .btn{ cursor:pointer; border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text);
-      padding:9px 12px; border-radius:12px; font-weight:800; }
-    .btn.primary{ background:linear-gradient(135deg, rgba(39,198,255,.18), rgba(168,85,247,.14)); }
-    .btn.danger{ background:rgba(255,90,103,.10); border-color:rgba(255,90,103,.30); }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; flex:1; }
     .field label{ font-size:12px; color:var(--muted); }
+
     input, select, textarea{
       border:1px solid var(--stroke); background:rgba(0,0,0,.18); color:var(--text);
       border-radius:12px; padding:10px 10px; outline:none;
     }
     select[multiple]{ min-height:112px; }
     textarea{ min-height:70px; resize:vertical; }
+
+    .btn{ cursor:pointer; border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text);
+      padding:9px 12px; border-radius:12px; font-weight:800; }
+    .btn.primary{ background:linear-gradient(135deg, rgba(39,198,255,.18), rgba(168,85,247,.14)); }
+    .btn.danger{ background:rgba(255,90,103,.10); border-color:rgba(255,90,103,.30); }
+    .btn.warn{ background:rgba(250,204,21,.10); border-color:rgba(250,204,21,.30); }
+
+    .pill{ display:inline-flex; padding:4px 9px; border-radius:999px; border:1px solid var(--stroke); font-size:12px; color:var(--muted); }
+    .badge{ display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.12); font-size:12px; color:var(--muted); }
+
     table{ width:100%; border-collapse:collapse; }
     th,td{ padding:10px; border-bottom:1px solid rgba(255,255,255,.08); font-size:13px; }
     th{ color:var(--muted); font-weight:800; text-align:left; }
-    .pill{ display:inline-flex; padding:4px 9px; border-radius:999px; border:1px solid var(--stroke); font-size:12px; color:var(--muted); }
+    tr:hover td{ background: rgba(255,255,255,.03); }
+
     .pos{ color:var(--ok); font-weight:900; }
     .neg{ color:var(--danger); font-weight:900; }
     .muted{ color:var(--muted); }
     .toast{ margin-top:10px; font-size:12px; color:var(--muted); }
     .hr{ height:1px; background:rgba(255,255,255,.08); margin:12px 0; }
-    .badge{ display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.12); font-size:12px; color:var(--muted); }
-    .settle{ display:grid; gap:10px; margin-top:10px; }
-    .settle-item{ display:flex; justify-content:space-between; gap:10px; padding:10px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:rgba(0,0,0,.12); }
     .hide{ display:none !important; }
-    .twoCol{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    @media (max-width: 980px){ .twoCol{ grid-template-columns:1fr; } }
+
+    .crown{ color:var(--warn); font-weight:900; }
+    .k{ display:inline-flex; align-items:center; gap:6px; }
     .mini{ font-size:12px; color:var(--muted); }
+    .roundline{ padding:8px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+    .roundline:last-child{ border-bottom:none; }
+    .tag{ font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.10); color:var(--muted); background:rgba(0,0,0,.15); }
+    .tag.white{ border-color:rgba(250,204,21,.35); color:rgba(250,204,21,.95); }
+    .tag.kill{ border-color:rgba(255,90,103,.35); color:rgba(255,90,103,.95); }
+    .tag.normal{ border-color:rgba(52,211,153,.25); color:rgba(52,211,153,.9); }
+
+    .cutsBox{ display:flex; flex-direction:column; gap:6px; }
+    .cutItem{
+      display:flex; justify-content:space-between; gap:10px;
+      padding:8px 10px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.12);
+      font-size:12px;
+    }
+    .cutItem button{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:10px;
+      padding:6px 8px;
+      cursor:pointer;
+      font-weight:800;
+    }
   </style>
 </head>
 <body>
@@ -67,11 +98,12 @@
     <div class="brand">
       <div class="logo"></div>
       <div>
-        <h1>TLMN Tournament Tracker • Pro</h1>
-        <div class="sub">NORMAL / WHITE / KILL (multi) • Pig cut: qty only • Scoreboard • Undo • Ledger</div>
+        <h1>TLMN Tournament Tracker • Pro v4</h1>
+        <div class="sub">Fixed endpoints • Pig cuts via “Submit round” • Crown leaderboard • Quick cut buttons</div>
       </div>
     </div>
     <div class="row">
+      <span class="pill" id="pillHealth">offline</span>
       <button class="btn" id="btnReload">Reload</button>
       <button class="btn primary" id="btnNewSession">New session</button>
     </div>
@@ -82,7 +114,7 @@
     <div class="card">
       <div class="hd">
         <div class="ttl">Sessions</div>
-        <span class="pill" id="pillHealth">offline</span>
+        <span class="pill" id="pillApi">API: —</span>
       </div>
       <div class="bd">
         <div class="badge" id="ruleLine">Rules: —</div>
@@ -94,16 +126,16 @@
 
         <div class="row">
           <button class="btn" id="btnOpen">Open</button>
-          <button class="btn danger" id="btnEnd">End session</button>
-          <button class="btn" id="btnUndo">Undo last</button>
+          <button class="btn danger" id="btnEnd">End</button>
+          <button class="btn warn" id="btnUndo">Undo last</button>
         </div>
 
         <div class="toast" id="toastLeft"></div>
 
         <div class="hr"></div>
 
-        <div class="ttl">MVP</div>
-        <div id="mvpBox" class="muted" style="margin-top:10px;">—</div>
+        <div class="ttl">Leaderboard</div>
+        <div id="leaderBox" class="muted" style="margin-top:10px;">—</div>
 
         <div class="hr"></div>
 
@@ -131,11 +163,6 @@
         </div>
 
         <div style="margin-top:10px;" id="balancesBox"></div>
-
-        <div class="hr"></div>
-
-        <div class="ttl">Settlement</div>
-        <div class="settle" id="settlementBox">—</div>
 
         <div class="hr"></div>
 
@@ -203,7 +230,7 @@
 
         <div class="hr"></div>
 
-        <div class="ttl">Chặt heo (optional) • 1 heo = 10.000 • nhập số lượng (qty)</div>
+        <div class="ttl">🐷 Pig cuts (optional) • 1 heo = 10.000 • Quick buttons</div>
         <div class="row" style="margin-top:10px;">
           <div class="field"><label>Người chặt</label><select id="cutCutter"></select></div>
           <div class="field"><label>Người bị chặt</label><select id="cutVictim"></select></div>
@@ -211,12 +238,17 @@
             <label>Số heo</label>
             <input id="cutQty" type="number" min="1" value="1"/>
           </div>
-          <div class="field" style="align-self:flex-end; max-width:160px;">
-            <button class="btn" id="btnAddCut">Add cut</button>
+          <div class="field" style="align-self:flex-end; max-width:220px;">
+            <div class="row" style="gap:8px;">
+              <button class="btn" id="btnAddCut">Add</button>
+              <button class="btn" id="btnCut1">🐷x1</button>
+              <button class="btn" id="btnCut2">🐷x2</button>
+              <button class="btn" id="btnCut3">🐷x3</button>
+            </div>
           </div>
         </div>
 
-        <div id="cutsList" class="muted" style="font-size:12px;"></div>
+        <div class="cutsBox" id="cutsList"></div>
 
         <div class="field" style="margin-top:10px;">
           <label>Note</label>
@@ -232,26 +264,28 @@
 
         <div class="hr"></div>
 
-        <div class="twoCol">
-          <div>
-            <div class="ttl">Recent rounds</div>
-            <div style="margin-top:10px;" id="roundsBox" class="muted">—</div>
-          </div>
-          <div>
-            <div class="ttl">Ledger (latest)</div>
-            <div class="mini">Bấm “Ledger” để tải thêm</div>
-            <div style="margin-top:10px;" id="ledgerBox" class="muted">—</div>
-          </div>
+        <div class="row" style="justify-content:space-between; align-items:center;">
+          <div class="ttl">Recent rounds</div>
+          <div class="mini muted">Hiển thị 30 ván gần nhất</div>
         </div>
+        <div style="margin-top:10px;" id="roundsBox" class="muted">—</div>
 
+        <div class="hr"></div>
+
+        <div class="ttl">Ledger (latest)</div>
+        <div class="mini">Bấm “Ledger” để tải thêm</div>
+        <div style="margin-top:10px;" id="ledgerBox" class="muted">—</div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  const API_BASE = "https://tienlen.testmail12071997.workers.dev"; // <-- set yours
+  // ✅ MUST SET to your real Worker domain
+  const API_BASE = "https://tienlen.testmail12071997.workers.dev"; // <-- change this
   const $ = (id)=>document.getElementById(id);
+
+  $("pillApi").textContent = "API: " + API_BASE.replace(/^https?:\/\//,"");
 
   function toast(el, msg){ el.textContent = msg; }
   function fmt(n, currency="VND"){
@@ -276,7 +310,7 @@
   function renderRules(){
     if (!rules){ $("ruleLine").textContent = "Rules: —"; return; }
     $("ruleLine").textContent =
-      `Money: Ba→Nhì ${fmt(rules.third_to_second)} | Bét→Nhất ${fmt(rules.last_to_first)} | Trắng ${fmt(rules.white_bonus_per_player)}/nhà | Giết ${fmt(rules.kill_per_victim)}/victim | Heo ${fmt(rules.pig_unit)}/con • Score: 1st+2 2nd+1 3rd-1 last-2 | heo ±qty | kill ±4 | white +6/-2`;
+      `Money: Ba→Nhì ${fmt(rules.third_to_second)} | Bét→Nhất ${fmt(rules.last_to_first)} | Trắng ${fmt(rules.white_bonus_per_player)}/nhà | Giết ${fmt(rules.kill_per_victim)}/victim | Heo ${fmt(rules.pig_unit)}/con • Score: +2/+1/-1/-2 | heo ±qty | kill ±4 | white +6/-2`;
   }
 
   function setPlayerOptions(players){
@@ -290,11 +324,22 @@
   }
 
   function renderCuts(){
-    if (!pendingCuts.length){ $("cutsList").textContent = "No cuts added."; return; }
-    $("cutsList").innerHTML = pendingCuts.map((c,i)=>
-      `<div>#${i+1} ${c.cutter} chặt ${c.victim} • heo x${c.qty}</div>`
-    ).join("");
+    const box = $("cutsList");
+    if (!pendingCuts.length){
+      box.innerHTML = `<div class="mini muted">No cuts added.</div>`;
+      return;
+    }
+    box.innerHTML = pendingCuts.map((c,i)=>`
+      <div class="cutItem">
+        <div>🐷 <b>#${i+1}</b> • <b>${c.cutter}</b> chặt <b>${c.victim}</b> • x<b>${c.qty}</b></div>
+        <button onclick="removeCut(${i})">Remove</button>
+      </div>
+    `).join("");
   }
+  window.removeCut = (i)=>{
+    pendingCuts.splice(i,1);
+    renderCuts();
+  };
 
   function renderBalances(balances, players, currency){
     const rows = players.map(p=>{
@@ -310,11 +355,21 @@
     `;
   }
 
-  function renderSettlement(settlement, currency){
-    if (!settlement?.length){ $("settlementBox").textContent = "—"; return; }
-    $("settlementBox").innerHTML = settlement.map(t=>
-      `<div class="settle-item"><div><b>${t.from}</b> trả <b>${t.to}</b></div><div class="pos">${fmt(t.amount, currency)}</div></div>`
-    ).join("");
+  function renderLeaderboard(balances, players, currency){
+    const arr = players.map(p=>({ p, net: Number(balances?.[p]||0) }))
+      .sort((a,b)=>b.net-a.net);
+    const leader = arr[0]?.p;
+    const rows = arr.map(x=>{
+      const cls = x.net >= 0 ? "pos":"neg";
+      const crown = x.p===leader ? `<span class="crown">👑</span>` : "";
+      return `<tr><td class="k">${crown}<b>${x.p}</b></td><td class="${cls}">${fmt(x.net, currency)}</td></tr>`;
+    }).join("");
+    $("leaderBox").innerHTML = `
+      <table>
+        <thead><tr><th>Player</th><th>Net</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
   }
 
   // ✅ 4 columns stats: Player | Net | Score | +/-
@@ -322,12 +377,10 @@
     const rows = players.map(p=>{
       const net = Number(balances?.[p] || 0);
       const netCls = net >= 0 ? "pos" : "neg";
-
       const score = Number(scoreByPlayer?.[p] || 0);
       const sign = score >= 0 ? "+" : "-";
       const abs = Math.abs(score);
       const signCls = score >= 0 ? "pos" : "neg";
-
       return `
         <tr>
           <td><b>${p}</b></td>
@@ -353,20 +406,16 @@
     `;
   }
 
-  function renderMVP(mvp, currency){
-    if (!mvp){ $("mvpBox").textContent = "—"; return; }
-    const netCls = (Number(mvp.net||0) >= 0) ? "pos" : "neg";
-    $("mvpBox").innerHTML = `
-      <div class="badge">🏆 <b>${mvp.p}</b> • Net <b class="${netCls}">${fmt(mvp.net, currency)}</b> • Score <b>${mvp.score ?? 0}</b></div>
-    `;
-  }
-
   function renderRounds(rounds){
     if (!rounds?.length){ $("roundsBox").textContent = "—"; return; }
     $("roundsBox").innerHTML = rounds.slice(0, 30).map(r=>{
       const t = new Date(r.created_at).toLocaleString("vi-VN");
       if (r.mode === "WHITE") {
-        return `<div>#${r.idx} • <b>TRẮNG</b>: <b>${r.white_winner}</b> <span class="muted">(${t})</span></div>`;
+        return `<div class="roundline">
+          <span class="tag white">WHITE</span>
+          <b>#${r.idx}</b> • ⭐ <b>${r.white_winner}</b>
+          <span class="muted">(${t})</span>
+        </div>`;
       }
       if (r.mode === "KILL") {
         let victims=[]; try{ victims=JSON.parse(r.victims_json||"[]"); }catch{}
@@ -374,18 +423,29 @@
           r.second_player ? ` • Nhì: <b>${r.second_player}</b>` : "",
           r.third_player ? ` • Ba: <b>${r.third_player}</b>` : ""
         ].join("");
-        return `<div>#${r.idx} • <b>KILL</b>: <b>${r.first_player}</b> giết <b>${victims.join(", ")}</b>${remainPart} <span class="muted">(${t})</span></div>`;
+        return `<div class="roundline">
+          <span class="tag kill">KILL</span>
+          <b>#${r.idx}</b> • 💀 <b>${r.first_player}</b> giết <b>${victims.join(", ")}</b>${remainPart}
+          <span class="muted">(${t})</span>
+        </div>`;
       }
-      return `<div>#${r.idx} • Nhất: <b>${r.first_player}</b> • Nhì: <b>${r.second_player}</b> • Ba: <b>${r.third_player}</b> • Bét: <b>${r.last_player}</b> <span class="muted">(${t})</span></div>`;
+      return `<div class="roundline">
+        <span class="tag normal">NORMAL</span>
+        <b>#${r.idx}</b> • Nhất: <b>${r.first_player}</b> • Nhì: <b>${r.second_player}</b> • Ba: <b>${r.third_player}</b> • Bét: <b>${r.last_player}</b>
+        <span class="muted">(${t})</span>
+      </div>`;
     }).join("");
   }
 
   function renderLedger(items, currency){
     if (!items?.length){ $("ledgerBox").textContent = "—"; return; }
-    $("ledgerBox").innerHTML = items.slice(0, 16).map(x=>{
+    $("ledgerBox").innerHTML = items.slice(0, 30).map(x=>{
       const cls = Number(x.delta)>=0 ? "pos" : "neg";
       const t = new Date(x.created_at).toLocaleTimeString("vi-VN");
-      return `<div>${t} • <b>${x.player}</b> <span class="${cls}">${fmt(x.delta, currency)}</span> • <span class="muted">${x.reason||""}</span></div>`;
+      return `<div class="roundline">
+        ${t} • <b>${x.player}</b> <span class="${cls}">${fmt(x.delta, currency)}</span>
+        <span class="muted">• ${x.reason||""}</span>
+      </div>`;
     }).join("");
   }
 
@@ -395,7 +455,7 @@
     $("killBox").classList.toggle("hide", mode !== "KILL");
 
     const cutDisabled = mode === "WHITE";
-    for (const id of ["cutCutter","cutVictim","cutQty","btnAddCut"]){
+    for (const id of ["cutCutter","cutVictim","cutQty","btnAddCut","btnCut1","btnCut2","btnCut3"]){
       $(id).disabled = cutDisabled;
     }
     if (cutDisabled) { pendingCuts = []; renderCuts(); }
@@ -460,6 +520,7 @@
         const ended = s.ended_at ? " (ended)" : "";
         return `<option value="${s.id}">${s.title}${ended} — ${new Date(s.created_at).toLocaleDateString("vi-VN")}</option>`;
       }).join("");
+
       toast($("toastLeft"), `Loaded ${data.sessions.length} sessions.`);
     }catch(e){
       toast($("toastLeft"), "Load sessions failed: " + e.message);
@@ -480,15 +541,12 @@
       setPlayerOptions(currentSession.players);
 
       renderBalances(data.balances, currentSession.players, currentSession.currency);
-      renderSettlement(data.settlement, currentSession.currency);
+      renderLeaderboard(data.balances, currentSession.players, currentSession.currency);
+      renderStats(data.balances, currentSession.players, currentSession.currency, data.scoreByPlayer);
       renderRounds(data.rounds);
 
-      // ✅ stats 4 columns by score rules
-      renderStats(data.balances, currentSession.players, currentSession.currency, data.scoreByPlayer);
-
-      renderMVP(data.mvp, currentSession.currency);
-
-      pendingCuts = []; renderCuts();
+      pendingCuts = [];
+      renderCuts();
 
       $("modeSelect").value = "NORMAL";
       setModeUI("NORMAL");
@@ -629,6 +687,17 @@
     }
   }
 
+  function addCutWithQty(qty){
+    if (!currentSession) return toast($("toastRight"), "Open a session first.");
+    if ($("modeSelect").value === "WHITE") return toast($("toastRight"), "Cuts disabled in WHITE.");
+    const cutter = $("cutCutter").value;
+    const victim = $("cutVictim").value;
+    qty = Math.max(1, Number(qty || 1) | 0);
+    if (cutter === victim) return toast($("toastRight"), "Cutter and victim must differ.");
+    pendingCuts.push({ cutter, victim, qty });
+    renderCuts();
+  }
+
   // Events
   $("btnReload").onclick = async ()=>{ await health(); await loadSessions(); };
   $("btnNewSession").onclick = newSessionFlow;
@@ -648,16 +717,11 @@
   $("killKiller").onchange = ()=>syncKillSecondThirdOptions();
   $("killVictims").onchange = ()=>syncKillSecondThirdOptions();
 
-  $("btnAddCut").onclick = ()=>{
-    if (!currentSession) return toast($("toastRight"), "Open a session first.");
-    if ($("modeSelect").value === "WHITE") return toast($("toastRight"), "Cuts disabled in WHITE.");
-    const cutter = $("cutCutter").value;
-    const victim = $("cutVictim").value;
-    const qty = Math.max(1, Number($("cutQty").value || 1) | 0);
-    if (cutter === victim) return toast($("toastRight"), "Cutter and victim must differ.");
-    pendingCuts.push({ cutter, victim, qty });
-    renderCuts();
-  };
+  $("btnAddCut").onclick = ()=> addCutWithQty($("cutQty").value);
+  $("btnCut1").onclick = ()=> addCutWithQty(1);
+  $("btnCut2").onclick = ()=> addCutWithQty(2);
+  $("btnCut3").onclick = ()=> addCutWithQty(3);
+
   $("btnClearCuts").onclick = ()=>{ pendingCuts = []; renderCuts(); };
 
   (async function init(){
