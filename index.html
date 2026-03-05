@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>TLMN Tournament Tracker • Pro v2</title>
+  <title>TLMN Tournament Tracker • Pro</title>
   <style>
     :root{
       --bg:#0b1220; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.10);
@@ -67,8 +67,8 @@
     <div class="brand">
       <div class="logo"></div>
       <div>
-        <h1>TLMN Tournament Tracker • Pro v2</h1>
-        <div class="sub">NORMAL / WHITE / KILL (multi) • Kill = 40k/victim (no bet) • Undo • Ledger • MVP</div>
+        <h1>TLMN Tournament Tracker • Pro</h1>
+        <div class="sub">NORMAL / WHITE / KILL (multi) • Pig cut: qty only • Scoreboard • Undo • Ledger</div>
       </div>
     </div>
     <div class="row">
@@ -147,7 +147,7 @@
             <select id="modeSelect">
               <option value="NORMAL">NORMAL</option>
               <option value="WHITE">WHITE (Thưởng trắng)</option>
-              <option value="KILL">KILL (Giết trắng)</option>
+              <option value="KILL">KILL (Giết / Nhốt)</option>
             </select>
           </div>
           <div class="badge" id="modeHint">—</div>
@@ -171,7 +171,7 @@
               <select id="whiteWinner"></select>
             </div>
           </div>
-          <div class="badge">WHITE: 3 nhà còn lại trả winner 20.000 • Không có rank</div>
+          <div class="badge">WHITE: 3 nhà còn lại trả winner 20.000 • Score: winner +6, mỗi nhà -2</div>
         </div>
 
         <!-- KILL -->
@@ -198,24 +198,17 @@
             </div>
           </div>
 
-          <div class="badge">KILL: mỗi victim trả killer 40.000 • (không cộng bét)</div>
+          <div class="badge">KILL: mỗi victim trả killer 40.000 • Score: killer +4/victim, victim -4</div>
         </div>
 
         <div class="hr"></div>
 
-        <div class="ttl">Chặt heo (optional) • BLACK=10k • RED=20k (không dùng trong WHITE)</div>
+        <div class="ttl">Chặt heo (optional) • 1 heo = 10.000 • nhập số lượng (qty)</div>
         <div class="row" style="margin-top:10px;">
           <div class="field"><label>Người chặt</label><select id="cutCutter"></select></div>
           <div class="field"><label>Người bị chặt</label><select id="cutVictim"></select></div>
-          <div class="field" style="max-width:170px;">
-            <label>Màu</label>
-            <select id="cutColor">
-              <option value="BLACK">Heo đen (10k)</option>
-              <option value="RED">Heo đỏ (20k)</option>
-            </select>
-          </div>
-          <div class="field" style="max-width:120px;">
-            <label>Số lần</label>
+          <div class="field" style="max-width:140px;">
+            <label>Số heo</label>
             <input id="cutQty" type="number" min="1" value="1"/>
           </div>
           <div class="field" style="align-self:flex-end; max-width:160px;">
@@ -283,7 +276,7 @@
   function renderRules(){
     if (!rules){ $("ruleLine").textContent = "Rules: —"; return; }
     $("ruleLine").textContent =
-      `Ba→Nhì ${fmt(rules.third_to_second)} | Bét→Nhất ${fmt(rules.last_to_first)} | Trắng ${fmt(rules.white_bonus_per_player)}/nhà | Giết ${fmt(rules.kill_per_victim)}/victim | Heo đen ${fmt(rules.pig_black)} | Heo đỏ ${fmt(rules.pig_red)}`;
+      `Money: Ba→Nhì ${fmt(rules.third_to_second)} | Bét→Nhất ${fmt(rules.last_to_first)} | Trắng ${fmt(rules.white_bonus_per_player)}/nhà | Giết ${fmt(rules.kill_per_victim)}/victim | Heo ${fmt(rules.pig_unit)}/con • Score: 1st+2 2nd+1 3rd-1 last-2 | heo ±qty | kill ±4 | white +6/-2`;
   }
 
   function setPlayerOptions(players){
@@ -299,7 +292,7 @@
   function renderCuts(){
     if (!pendingCuts.length){ $("cutsList").textContent = "No cuts added."; return; }
     $("cutsList").innerHTML = pendingCuts.map((c,i)=>
-      `<div>#${i+1} ${c.cutter} chặt ${c.victim} • ${c.color} x${c.qty}</div>`
+      `<div>#${i+1} ${c.cutter} chặt ${c.victim} • heo x${c.qty}</div>`
     ).join("");
   }
 
@@ -324,23 +317,23 @@
     ).join("");
   }
 
-  function renderStats(stats, balances, players, currency){
-    if (!stats){ $("statsBox").textContent = "—"; return; }
+  // ✅ 4 columns stats: Player | Net | Score | +/-
+  function renderStats(balances, players, currency, scoreByPlayer){
     const rows = players.map(p=>{
-      const st = stats[p] || {};
       const net = Number(balances?.[p] || 0);
       const netCls = net >= 0 ? "pos" : "neg";
+
+      const score = Number(scoreByPlayer?.[p] || 0);
+      const sign = score >= 0 ? "+" : "-";
+      const abs = Math.abs(score);
+      const signCls = score >= 0 ? "pos" : "neg";
+
       return `
         <tr>
           <td><b>${p}</b></td>
           <td class="${netCls}">${fmt(net, currency)}</td>
-          <td>${st.first||0}</td>
-          <td>${st.second||0}</td>
-          <td>${st.third||0}</td>
-          <td>${st.last||0}</td>
-          <td>${st.white_wins||0}</td>
-          <td>${(st.kills_made||0)} (${(st.killed_victims||0)})</td>
-          <td>${st.killed_times||0}</td>
+          <td class="${signCls}">${score}</td>
+          <td class="${signCls}">${sign}${abs}</td>
         </tr>
       `;
     }).join("");
@@ -349,8 +342,10 @@
       <table>
         <thead>
           <tr>
-            <th>Player</th><th>Net</th><th>1st</th><th>2nd</th><th>3rd</th><th>Last</th>
-            <th>White</th><th>Kills(victims)</th><th>Killed</th>
+            <th>Player</th>
+            <th>Net</th>
+            <th>Score</th>
+            <th>+/-</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -360,11 +355,9 @@
 
   function renderMVP(mvp, currency){
     if (!mvp){ $("mvpBox").textContent = "—"; return; }
+    const netCls = (Number(mvp.net||0) >= 0) ? "pos" : "neg";
     $("mvpBox").innerHTML = `
-      <div class="badge">🏆 <b>${mvp.p}</b> • Net <b class="${mvp.net>=0?'pos':'neg'}">${fmt(mvp.net, currency)}</b></div>
-      <div class="mini" style="margin-top:8px;">
-        Tie-breakers: 1st=${mvp.first} • White=${mvp.white} • Kill victims=${mvp.killsVictims}
-      </div>
+      <div class="badge">🏆 <b>${mvp.p}</b> • Net <b class="${netCls}">${fmt(mvp.net, currency)}</b> • Score <b>${mvp.score ?? 0}</b></div>
     `;
   }
 
@@ -373,7 +366,7 @@
     $("roundsBox").innerHTML = rounds.slice(0, 30).map(r=>{
       const t = new Date(r.created_at).toLocaleString("vi-VN");
       if (r.mode === "WHITE") {
-        return `<div>#${r.idx} • <b>TRẮNG</b>: <b>${r.white_winner}</b> • (3 nhà trả 20.000) <span class="muted">(${t})</span></div>`;
+        return `<div>#${r.idx} • <b>TRẮNG</b>: <b>${r.white_winner}</b> <span class="muted">(${t})</span></div>`;
       }
       if (r.mode === "KILL") {
         let victims=[]; try{ victims=JSON.parse(r.victims_json||"[]"); }catch{}
@@ -381,7 +374,7 @@
           r.second_player ? ` • Nhì: <b>${r.second_player}</b>` : "",
           r.third_player ? ` • Ba: <b>${r.third_player}</b>` : ""
         ].join("");
-        return `<div>#${r.idx} • <b>GIẾT</b>: <b>${r.first_player}</b> giết <b>${victims.join(", ")}</b>${remainPart} <span class="muted">(${t})</span></div>`;
+        return `<div>#${r.idx} • <b>KILL</b>: <b>${r.first_player}</b> giết <b>${victims.join(", ")}</b>${remainPart} <span class="muted">(${t})</span></div>`;
       }
       return `<div>#${r.idx} • Nhất: <b>${r.first_player}</b> • Nhì: <b>${r.second_player}</b> • Ba: <b>${r.third_player}</b> • Bét: <b>${r.last_player}</b> <span class="muted">(${t})</span></div>`;
     }).join("");
@@ -402,15 +395,15 @@
     $("killBox").classList.toggle("hide", mode !== "KILL");
 
     const cutDisabled = mode === "WHITE";
-    for (const id of ["cutCutter","cutVictim","cutColor","cutQty","btnAddCut"]){
+    for (const id of ["cutCutter","cutVictim","cutQty","btnAddCut"]){
       $(id).disabled = cutDisabled;
     }
     if (cutDisabled) { pendingCuts = []; renderCuts(); }
 
     $("modeHint").textContent =
-      mode === "NORMAL" ? "NORMAL: 20k bét→nhất + 10k ba→nhì" :
-      mode === "WHITE"  ? "WHITE: 3 nhà trả winner 20k, không có rank" :
-      "KILL: mỗi victim trả killer 40k, chọn nhì/ba nếu còn người";
+      mode === "NORMAL" ? "NORMAL: 20k bét→nhất + 10k ba→nhì (Score: +2/+1/-1/-2)" :
+      mode === "WHITE"  ? "WHITE: 3 nhà trả winner 20k (Score: winner +6, mỗi nhà -2)" :
+      "KILL: mỗi victim trả killer 40k (Score: killer +4/victim, victim -4)";
   }
 
   function getSelectedVictims(){
@@ -489,7 +482,10 @@
       renderBalances(data.balances, currentSession.players, currentSession.currency);
       renderSettlement(data.settlement, currentSession.currency);
       renderRounds(data.rounds);
-      renderStats(data.stats, data.balances, currentSession.players, currentSession.currency);
+
+      // ✅ stats 4 columns by score rules
+      renderStats(data.balances, currentSession.players, currentSession.currency, data.scoreByPlayer);
+
       renderMVP(data.mvp, currentSession.currency);
 
       pendingCuts = []; renderCuts();
@@ -501,7 +497,6 @@
       Array.from($("killVictims").options).forEach(o=>o.selected=false);
       syncKillSecondThirdOptions();
 
-      // load mini ledger
       const led = await api(`/api/sessions/${id}/ledger?limit=80`);
       renderLedger(led.items, currentSession.currency);
 
@@ -555,9 +550,6 @@
         toast($("toastRight"), "⚠️ Chọn Nhì/Ba đúng 2 người còn lại.");
         return false;
       }
-    }
-    if (remaining.length === 1) {
-      // ok auto
     }
     return true;
   }
@@ -661,10 +653,9 @@
     if ($("modeSelect").value === "WHITE") return toast($("toastRight"), "Cuts disabled in WHITE.");
     const cutter = $("cutCutter").value;
     const victim = $("cutVictim").value;
-    const color = $("cutColor").value;
     const qty = Math.max(1, Number($("cutQty").value || 1) | 0);
     if (cutter === victim) return toast($("toastRight"), "Cutter and victim must differ.");
-    pendingCuts.push({ cutter, victim, color, qty });
+    pendingCuts.push({ cutter, victim, qty });
     renderCuts();
   };
   $("btnClearCuts").onclick = ()=>{ pendingCuts = []; renderCuts(); };
