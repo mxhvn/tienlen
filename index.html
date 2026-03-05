@@ -1,736 +1,329 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>TLMN Tournament Tracker • Pro v4</title>
-  <style>
-    :root{
-      --bg:#0b1220; --card:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.10);
-      --text:#eaf0ff; --muted:rgba(234,240,255,.70);
-      --danger:#ff5a67; --ok:#34d399; --warn:#facc15;
-      --r:16px; --shadow:0 20px 60px rgba(0,0,0,.45);
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    }
-    body{ margin:0; background:
-      radial-gradient(1000px 600px at 20% -10%, rgba(39,198,255,.18), transparent 60%),
-      radial-gradient(1000px 600px at 80% 0%, rgba(168,85,247,.16), transparent 60%),
-      var(--bg); color:var(--text);
-    }
-    .wrap{ max-width:1240px; margin:28px auto; padding:0 18px; }
-    .top{ display:flex; gap:14px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
-    .brand{ display:flex; gap:10px; align-items:center; }
-    .logo{ width:40px; height:40px; border-radius:12px; background:rgba(39,198,255,.18); border:1px solid var(--stroke); box-shadow:var(--shadow); }
-    h1{ font-size:18px; margin:0; letter-spacing:.3px;}
-    .sub{ font-size:12px; color:var(--muted); margin-top:3px;}
-    .grid{ display:grid; grid-template-columns: 420px 1fr; gap:14px; margin-top:14px; }
-    @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
+<meta charset="UTF-8">
+<title>Tiến Lên Tracker</title>
 
-    .card{ background:var(--card); border:1px solid var(--stroke); border-radius:var(--r); box-shadow:var(--shadow); }
-    .card .hd{ padding:12px 12px 0 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
-    .card .bd{ padding:12px; }
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    .ttl{ font-size:13px; color:var(--muted); }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; flex:1; }
-    .field label{ font-size:12px; color:var(--muted); }
+<style>
 
-    input, select, textarea{
-      border:1px solid var(--stroke); background:rgba(0,0,0,.18); color:var(--text);
-      border-radius:12px; padding:10px 10px; outline:none;
-    }
-    select[multiple]{ min-height:112px; }
-    textarea{ min-height:70px; resize:vertical; }
+body{
+font-family:system-ui;
+background:#0f172a;
+color:white;
+margin:0;
+padding:12px;
+}
 
-    .btn{ cursor:pointer; border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text);
-      padding:9px 12px; border-radius:12px; font-weight:800; }
-    .btn.primary{ background:linear-gradient(135deg, rgba(39,198,255,.18), rgba(168,85,247,.14)); }
-    .btn.danger{ background:rgba(255,90,103,.10); border-color:rgba(255,90,103,.30); }
-    .btn.warn{ background:rgba(250,204,21,.10); border-color:rgba(250,204,21,.30); }
+h2{
+margin:10px 0;
+}
 
-    .pill{ display:inline-flex; padding:4px 9px; border-radius:999px; border:1px solid var(--stroke); font-size:12px; color:var(--muted); }
-    .badge{ display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.12); font-size:12px; color:var(--muted); }
+.card{
+background:#1e293b;
+padding:14px;
+border-radius:10px;
+margin-bottom:12px;
+}
 
-    table{ width:100%; border-collapse:collapse; }
-    th,td{ padding:10px; border-bottom:1px solid rgba(255,255,255,.08); font-size:13px; }
-    th{ color:var(--muted); font-weight:800; text-align:left; }
-    tr:hover td{ background: rgba(255,255,255,.03); }
+input,button{
+width:100%;
+padding:12px;
+margin-top:6px;
+border-radius:8px;
+border:none;
+font-size:16px;
+}
 
-    .pos{ color:var(--ok); font-weight:900; }
-    .neg{ color:var(--danger); font-weight:900; }
-    .muted{ color:var(--muted); }
-    .toast{ margin-top:10px; font-size:12px; color:var(--muted); }
-    .hr{ height:1px; background:rgba(255,255,255,.08); margin:12px 0; }
-    .hide{ display:none !important; }
+button{
+background:#22c55e;
+color:white;
+}
 
-    .crown{ color:var(--warn); font-weight:900; }
-    .k{ display:inline-flex; align-items:center; gap:6px; }
-    .mini{ font-size:12px; color:var(--muted); }
-    .roundline{ padding:8px 0; border-bottom:1px solid rgba(255,255,255,.06); }
-    .roundline:last-child{ border-bottom:none; }
-    .tag{ font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.10); color:var(--muted); background:rgba(0,0,0,.15); }
-    .tag.white{ border-color:rgba(250,204,21,.35); color:rgba(250,204,21,.95); }
-    .tag.kill{ border-color:rgba(255,90,103,.35); color:rgba(255,90,103,.95); }
-    .tag.normal{ border-color:rgba(52,211,153,.25); color:rgba(52,211,153,.9); }
+.playerbtn{
+background:#334155;
+margin:4px 0;
+}
 
-    .cutsBox{ display:flex; flex-direction:column; gap:6px; }
-    .cutItem{
-      display:flex; justify-content:space-between; gap:10px;
-      padding:8px 10px; border-radius:12px;
-      border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.12);
-      font-size:12px;
-    }
-    .cutItem button{
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      border-radius:10px;
-      padding:6px 8px;
-      cursor:pointer;
-      font-weight:800;
-    }
-  </style>
+.row{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:6px;
+}
+
+.score{
+display:flex;
+justify-content:space-between;
+padding:6px 0;
+border-bottom:1px solid #334155;
+}
+
+.pos{color:#22c55e}
+.neg{color:#ef4444}
+
+.round{
+font-size:14px;
+border-bottom:1px solid #334155;
+padding:6px 0;
+}
+
+</style>
 </head>
+
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="brand">
-      <div class="logo"></div>
-      <div>
-        <h1>TLMN Tournament Tracker • Pro v4</h1>
-        <div class="sub">Fixed endpoints • Pig cuts via “Submit round” • Crown leaderboard • Quick cut buttons</div>
-      </div>
-    </div>
-    <div class="row">
-      <span class="pill" id="pillHealth">offline</span>
-      <button class="btn" id="btnReload">Reload</button>
-      <button class="btn primary" id="btnNewSession">New session</button>
-    </div>
-  </div>
 
-  <div class="grid">
-    <!-- Left -->
-    <div class="card">
-      <div class="hd">
-        <div class="ttl">Sessions</div>
-        <span class="pill" id="pillApi">API: —</span>
-      </div>
-      <div class="bd">
-        <div class="badge" id="ruleLine">Rules: —</div>
+<h2>🃏 Tiến Lên Tracker</h2>
 
-        <div class="field" style="margin-top:12px;">
-          <label>Select session</label>
-          <select id="sessionSelect"></select>
-        </div>
+<div class="card">
 
-        <div class="row">
-          <button class="btn" id="btnOpen">Open</button>
-          <button class="btn danger" id="btnEnd">End</button>
-          <button class="btn warn" id="btnUndo">Undo last</button>
-        </div>
+<b>Tạo bàn</b>
 
-        <div class="toast" id="toastLeft"></div>
+<input id="p1" placeholder="Player A">
+<input id="p2" placeholder="Player B">
+<input id="p3" placeholder="Player C">
+<input id="p4" placeholder="Player D">
 
-        <div class="hr"></div>
+<button onclick="createSession()">Create</button>
 
-        <div class="ttl">Leaderboard</div>
-        <div id="leaderBox" class="muted" style="margin-top:10px;">—</div>
+</div>
 
-        <div class="hr"></div>
+<div class="card">
 
-        <div class="ttl">Tournament stats</div>
-        <div id="statsBox" class="muted" style="margin-top:10px;">—</div>
-      </div>
-    </div>
+<b>Chọn bàn</b>
+<div id="sessions"></div>
 
-    <!-- Right -->
-    <div class="card">
-      <div class="hd">
-        <div class="ttl" id="sessionTitle">No session opened</div>
-        <span class="pill" id="sessionMeta">—</span>
-      </div>
-      <div class="bd">
-        <div class="row" style="justify-content:space-between; align-items:center;">
-          <div>
-            <div class="ttl">Balances</div>
-            <div class="sub muted" id="playersLine"></div>
-          </div>
-          <div class="row">
-            <button class="btn" id="btnRefresh">Refresh</button>
-            <button class="btn" id="btnLedger">Ledger</button>
-          </div>
-        </div>
+</div>
 
-        <div style="margin-top:10px;" id="balancesBox"></div>
+<div id="game" style="display:none">
 
-        <div class="hr"></div>
+<div class="card">
 
-        <div class="ttl">Add round</div>
+<b>Kết quả ván</b>
 
-        <div class="row" style="margin-top:10px;">
-          <div class="field" style="max-width:260px;">
-            <label>Mode</label>
-            <select id="modeSelect">
-              <option value="NORMAL">NORMAL</option>
-              <option value="WHITE">WHITE (Thưởng trắng)</option>
-              <option value="KILL">KILL (Giết / Nhốt)</option>
-            </select>
-          </div>
-          <div class="badge" id="modeHint">—</div>
-        </div>
+<label>Nhất</label>
+<div id="first"></div>
 
-        <!-- NORMAL -->
-        <div id="normalBox">
-          <div class="row" style="margin-top:10px;">
-            <div class="field"><label>Nhất</label><select id="firstPlayer"></select></div>
-            <div class="field"><label>Nhì</label><select id="secondPlayer"></select></div>
-            <div class="field"><label>Ba</label><select id="thirdPlayer"></select></div>
-            <div class="field"><label>Bét</label><select id="lastPlayer"></select></div>
-          </div>
-        </div>
+<label>Nhì</label>
+<div id="second"></div>
 
-        <!-- WHITE -->
-        <div id="whiteBox" class="hide">
-          <div class="row" style="margin-top:10px;">
-            <div class="field">
-              <label>Người thưởng trắng</label>
-              <select id="whiteWinner"></select>
-            </div>
-          </div>
-          <div class="badge">WHITE: 3 nhà còn lại trả winner 20.000 • Score: winner +6, mỗi nhà -2</div>
-        </div>
+<label>Ba</label>
+<div id="third"></div>
 
-        <!-- KILL -->
-        <div id="killBox" class="hide">
-          <div class="row" style="margin-top:10px;">
-            <div class="field">
-              <label>Killer (mặc định Nhất)</label>
-              <select id="killKiller"></select>
-            </div>
-            <div class="field">
-              <label>Victims (1–3 người, multi-select)</label>
-              <select id="killVictims" multiple></select>
-            </div>
-          </div>
+<label>Bét</label>
+<div id="last"></div>
 
-          <div class="row">
-            <div class="field">
-              <label>Nhì (nếu còn người)</label>
-              <select id="killSecond"></select>
-            </div>
-            <div class="field">
-              <label>Ba (chỉ khi còn 2 người)</label>
-              <select id="killThird"></select>
-            </div>
-          </div>
+<button onclick="submitRound()">Lưu ván</button>
 
-          <div class="badge">KILL: mỗi victim trả killer 40.000 • Score: killer +4/victim, victim -4</div>
-        </div>
+</div>
 
-        <div class="hr"></div>
+<div class="card">
 
-        <div class="ttl">🐷 Pig cuts (optional) • 1 heo = 10.000 • Quick buttons</div>
-        <div class="row" style="margin-top:10px;">
-          <div class="field"><label>Người chặt</label><select id="cutCutter"></select></div>
-          <div class="field"><label>Người bị chặt</label><select id="cutVictim"></select></div>
-          <div class="field" style="max-width:140px;">
-            <label>Số heo</label>
-            <input id="cutQty" type="number" min="1" value="1"/>
-          </div>
-          <div class="field" style="align-self:flex-end; max-width:220px;">
-            <div class="row" style="gap:8px;">
-              <button class="btn" id="btnAddCut">Add</button>
-              <button class="btn" id="btnCut1">🐷x1</button>
-              <button class="btn" id="btnCut2">🐷x2</button>
-              <button class="btn" id="btnCut3">🐷x3</button>
-            </div>
-          </div>
-        </div>
+<b>🐷 Chặt heo</b>
 
-        <div class="cutsBox" id="cutsList"></div>
+<label>Người chặt</label>
+<div id="cutCutter"></div>
 
-        <div class="field" style="margin-top:10px;">
-          <label>Note</label>
-          <textarea id="roundNote" placeholder="Ghi chú (tuỳ chọn)"></textarea>
-        </div>
+<label>Người bị chặt</label>
+<div id="cutVictim"></div>
 
-        <div class="row">
-          <button class="btn primary" id="btnSubmitRound">Submit round</button>
-          <button class="btn" id="btnClearCuts">Clear cuts</button>
-        </div>
+<div class="row">
+<button onclick="cut(1)">🐷 x1</button>
+<button onclick="cut(2)">🐷 x2</button>
+</div>
 
-        <div class="toast" id="toastRight"></div>
+</div>
 
-        <div class="hr"></div>
+<div class="card">
 
-        <div class="row" style="justify-content:space-between; align-items:center;">
-          <div class="ttl">Recent rounds</div>
-          <div class="mini muted">Hiển thị 30 ván gần nhất</div>
-        </div>
-        <div style="margin-top:10px;" id="roundsBox" class="muted">—</div>
+<b>Scoreboard</b>
+<div id="scores"></div>
 
-        <div class="hr"></div>
+</div>
 
-        <div class="ttl">Ledger (latest)</div>
-        <div class="mini">Bấm “Ledger” để tải thêm</div>
-        <div style="margin-top:10px;" id="ledgerBox" class="muted">—</div>
-      </div>
-    </div>
-  </div>
+<div class="card">
+
+<b>History</b>
+<div id="rounds"></div>
+
+</div>
+
 </div>
 
 <script>
-  // ✅ MUST SET to your real Worker domain
-  const API_BASE = "https://tienlen.testmail12071997.workers.dev"; // <-- change this
-  const $ = (id)=>document.getElementById(id);
 
-  $("pillApi").textContent = "API: " + API_BASE.replace(/^https?:\/\//,"");
+const API="https://tienlen.testmail12071997.workers.dev"
 
-  function toast(el, msg){ el.textContent = msg; }
-  function fmt(n, currency="VND"){
-    const v = Number(n||0);
-    return v.toLocaleString("vi-VN") + " " + currency;
-  }
+let session=null
+let players=[]
+let roundData={}
 
-  async function api(path, {method="GET", body=null}={}){
-    const url = API_BASE + path;
-    const headers = { "Content-Type":"application/json" };
-    const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : null });
-    const data = await res.json().catch(()=>({ok:false,error:"Bad JSON"}));
-    if (!res.ok || data.ok === false) throw new Error(data.error || ("HTTP " + res.status));
-    return data;
-  }
+const $=id=>document.getElementById(id)
 
-  let currentSessionId = null;
-  let currentSession = null;
-  let rules = null;
-  let pendingCuts = [];
+function fmt(n){
+return n.toLocaleString()+"đ"
+}
 
-  function renderRules(){
-    if (!rules){ $("ruleLine").textContent = "Rules: —"; return; }
-    $("ruleLine").textContent =
-      `Money: Ba→Nhì ${fmt(rules.third_to_second)} | Bét→Nhất ${fmt(rules.last_to_first)} | Trắng ${fmt(rules.white_bonus_per_player)}/nhà | Giết ${fmt(rules.kill_per_victim)}/victim | Heo ${fmt(rules.pig_unit)}/con • Score: +2/+1/-1/-2 | heo ±qty | kill ±4 | white +6/-2`;
-  }
+async function createSession(){
 
-  function setPlayerOptions(players){
-    const single = ["firstPlayer","secondPlayer","thirdPlayer","lastPlayer","whiteWinner","cutCutter","cutVictim","killKiller","killSecond","killThird"];
-    for (const id of single){
-      const sel = $(id);
-      if (!sel) continue;
-      sel.innerHTML = players.map(p=>`<option value="${p}">${p}</option>`).join("");
-    }
-    $("killVictims").innerHTML = players.map(p=>`<option value="${p}">${p}</option>`).join("");
-  }
+const p=[p1.value,p2.value,p3.value,p4.value]
 
-  function renderCuts(){
-    const box = $("cutsList");
-    if (!pendingCuts.length){
-      box.innerHTML = `<div class="mini muted">No cuts added.</div>`;
-      return;
-    }
-    box.innerHTML = pendingCuts.map((c,i)=>`
-      <div class="cutItem">
-        <div>🐷 <b>#${i+1}</b> • <b>${c.cutter}</b> chặt <b>${c.victim}</b> • x<b>${c.qty}</b></div>
-        <button onclick="removeCut(${i})">Remove</button>
-      </div>
-    `).join("");
-  }
-  window.removeCut = (i)=>{
-    pendingCuts.splice(i,1);
-    renderCuts();
-  };
+await fetch(API+"/session",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({players:p})
+})
 
-  function renderBalances(balances, players, currency){
-    const rows = players.map(p=>{
-      const b = Number(balances?.[p] || 0);
-      const cls = b >= 0 ? "pos" : "neg";
-      return `<tr><td>${p}</td><td class="${cls}">${fmt(b, currency)}</td></tr>`;
-    }).join("");
-    $("balancesBox").innerHTML = `
-      <table>
-        <thead><tr><th>Player</th><th>Net</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-  }
+loadSessions()
 
-  function renderLeaderboard(balances, players, currency){
-    const arr = players.map(p=>({ p, net: Number(balances?.[p]||0) }))
-      .sort((a,b)=>b.net-a.net);
-    const leader = arr[0]?.p;
-    const rows = arr.map(x=>{
-      const cls = x.net >= 0 ? "pos":"neg";
-      const crown = x.p===leader ? `<span class="crown">👑</span>` : "";
-      return `<tr><td class="k">${crown}<b>${x.p}</b></td><td class="${cls}">${fmt(x.net, currency)}</td></tr>`;
-    }).join("");
-    $("leaderBox").innerHTML = `
-      <table>
-        <thead><tr><th>Player</th><th>Net</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-  }
+}
 
-  // ✅ 4 columns stats: Player | Net | Score | +/-
-  function renderStats(balances, players, currency, scoreByPlayer){
-    const rows = players.map(p=>{
-      const net = Number(balances?.[p] || 0);
-      const netCls = net >= 0 ? "pos" : "neg";
-      const score = Number(scoreByPlayer?.[p] || 0);
-      const sign = score >= 0 ? "+" : "-";
-      const abs = Math.abs(score);
-      const signCls = score >= 0 ? "pos" : "neg";
-      return `
-        <tr>
-          <td><b>${p}</b></td>
-          <td class="${netCls}">${fmt(net, currency)}</td>
-          <td class="${signCls}">${score}</td>
-          <td class="${signCls}">${sign}${abs}</td>
-        </tr>
-      `;
-    }).join("");
+async function loadSessions(){
 
-    $("statsBox").innerHTML = `
-      <table>
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Net</th>
-            <th>Score</th>
-            <th>+/-</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-  }
+const r=await fetch(API+"/sessions")
+const data=await r.json()
 
-  function renderRounds(rounds){
-    if (!rounds?.length){ $("roundsBox").textContent = "—"; return; }
-    $("roundsBox").innerHTML = rounds.slice(0, 30).map(r=>{
-      const t = new Date(r.created_at).toLocaleString("vi-VN");
-      if (r.mode === "WHITE") {
-        return `<div class="roundline">
-          <span class="tag white">WHITE</span>
-          <b>#${r.idx}</b> • ⭐ <b>${r.white_winner}</b>
-          <span class="muted">(${t})</span>
-        </div>`;
-      }
-      if (r.mode === "KILL") {
-        let victims=[]; try{ victims=JSON.parse(r.victims_json||"[]"); }catch{}
-        const remainPart = [
-          r.second_player ? ` • Nhì: <b>${r.second_player}</b>` : "",
-          r.third_player ? ` • Ba: <b>${r.third_player}</b>` : ""
-        ].join("");
-        return `<div class="roundline">
-          <span class="tag kill">KILL</span>
-          <b>#${r.idx}</b> • 💀 <b>${r.first_player}</b> giết <b>${victims.join(", ")}</b>${remainPart}
-          <span class="muted">(${t})</span>
-        </div>`;
-      }
-      return `<div class="roundline">
-        <span class="tag normal">NORMAL</span>
-        <b>#${r.idx}</b> • Nhất: <b>${r.first_player}</b> • Nhì: <b>${r.second_player}</b> • Ba: <b>${r.third_player}</b> • Bét: <b>${r.last_player}</b>
-        <span class="muted">(${t})</span>
-      </div>`;
-    }).join("");
-  }
+sessions.innerHTML=data.sessions.map(s=>
 
-  function renderLedger(items, currency){
-    if (!items?.length){ $("ledgerBox").textContent = "—"; return; }
-    $("ledgerBox").innerHTML = items.slice(0, 30).map(x=>{
-      const cls = Number(x.delta)>=0 ? "pos" : "neg";
-      const t = new Date(x.created_at).toLocaleTimeString("vi-VN");
-      return `<div class="roundline">
-        ${t} • <b>${x.player}</b> <span class="${cls}">${fmt(x.delta, currency)}</span>
-        <span class="muted">• ${x.reason||""}</span>
-      </div>`;
-    }).join("");
-  }
+`<button class="playerbtn"
+onclick="openSession('${s.id}')">
 
-  function setModeUI(mode){
-    $("normalBox").classList.toggle("hide", mode !== "NORMAL");
-    $("whiteBox").classList.toggle("hide", mode !== "WHITE");
-    $("killBox").classList.toggle("hide", mode !== "KILL");
+${s.players.join(" vs ")}
 
-    const cutDisabled = mode === "WHITE";
-    for (const id of ["cutCutter","cutVictim","cutQty","btnAddCut","btnCut1","btnCut2","btnCut3"]){
-      $(id).disabled = cutDisabled;
-    }
-    if (cutDisabled) { pendingCuts = []; renderCuts(); }
+</button>`
 
-    $("modeHint").textContent =
-      mode === "NORMAL" ? "NORMAL: 20k bét→nhất + 10k ba→nhì (Score: +2/+1/-1/-2)" :
-      mode === "WHITE"  ? "WHITE: 3 nhà trả winner 20k (Score: winner +6, mỗi nhà -2)" :
-      "KILL: mỗi victim trả killer 40k (Score: killer +4/victim, victim -4)";
-  }
+).join("")
 
-  function getSelectedVictims(){
-    return Array.from($("killVictims").selectedOptions).map(o=>o.value);
-  }
+}
 
-  function syncKillSecondThirdOptions(){
-    if (!currentSession) return;
-    const killer = $("killKiller").value;
-    const victims = getSelectedVictims();
-    const remaining = currentSession.players.filter(p => p !== killer && !victims.includes(p)); // 0..2
+async function openSession(id){
 
-    const s2 = $("killSecond");
-    const s3 = $("killThird");
+session=id
 
-    s2.innerHTML = `<option value="">-- none --</option>` + remaining.map(p=>`<option value="${p}">${p}</option>`).join("");
-    s3.innerHTML = `<option value="">-- none --</option>` + remaining.map(p=>`<option value="${p}">${p}</option>`).join("");
+game.style.display="block"
 
-    if (remaining.length === 1) {
-      s2.value = remaining[0];
-      s2.disabled = true;
-      s3.value = "";
-      s3.disabled = true;
-    } else if (remaining.length === 2) {
-      s2.disabled = false;
-      s3.disabled = false;
-      if (!remaining.includes(s2.value)) s2.value = remaining[0];
-      if (!remaining.includes(s3.value) || s3.value === s2.value) s3.value = remaining[1];
-    } else {
-      s2.value = ""; s3.value = "";
-      s2.disabled = true; s3.disabled = true;
-    }
-  }
+const r=await fetch(API+"/session/"+id)
+const data=await r.json()
 
-  async function health(){
-    try{
-      const res = await fetch(API_BASE + "/api/health");
-      const data = await res.json();
-      $("pillHealth").textContent = data.ok ? "online" : "offline";
-      $("pillHealth").style.opacity = data.ok ? "1" : ".6";
-    }catch{
-      $("pillHealth").textContent = "offline";
-      $("pillHealth").style.opacity = ".6";
-    }
-  }
+players=data.session.players
 
-  async function loadSessions(){
-    try{
-      const data = await api("/api/sessions");
-      rules = data.rules;
-      renderRules();
+renderPlayers()
 
-      $("sessionSelect").innerHTML = data.sessions.map(s=>{
-        const ended = s.ended_at ? " (ended)" : "";
-        return `<option value="${s.id}">${s.title}${ended} — ${new Date(s.created_at).toLocaleDateString("vi-VN")}</option>`;
-      }).join("");
+renderScores(data.balances)
 
-      toast($("toastLeft"), `Loaded ${data.sessions.length} sessions.`);
-    }catch(e){
-      toast($("toastLeft"), "Load sessions failed: " + e.message);
-    }
-  }
+renderRounds(data.rounds)
 
-  async function openSession(id){
-    try{
-      const data = await api(`/api/sessions/${id}`);
-      currentSessionId = id;
-      currentSession = data.session;
-      rules = data.rules || rules;
-      renderRules();
+}
 
-      $("sessionTitle").textContent = currentSession.title;
-      $("sessionMeta").textContent = currentSession.is_locked ? "Locked" : "Live";
-      $("playersLine").textContent = "Players: " + currentSession.players.join(" • ");
-      setPlayerOptions(currentSession.players);
+function renderPlayers(){
 
-      renderBalances(data.balances, currentSession.players, currentSession.currency);
-      renderLeaderboard(data.balances, currentSession.players, currentSession.currency);
-      renderStats(data.balances, currentSession.players, currentSession.currency, data.scoreByPlayer);
-      renderRounds(data.rounds);
+function buttons(target,key){
 
-      pendingCuts = [];
-      renderCuts();
+$(target).innerHTML=players.map(p=>
 
-      $("modeSelect").value = "NORMAL";
-      setModeUI("NORMAL");
+`<button class="playerbtn"
+onclick="set('${key}','${p}')">
 
-      $("killKiller").value = currentSession.players[0];
-      Array.from($("killVictims").options).forEach(o=>o.selected=false);
-      syncKillSecondThirdOptions();
+${p}
 
-      const led = await api(`/api/sessions/${id}/ledger?limit=80`);
-      renderLedger(led.items, currentSession.currency);
+</button>`
 
-      toast($("toastRight"), "Session opened.");
-    }catch(e){
-      toast($("toastRight"), "Open session failed: " + e.message);
-    }
-  }
+).join("")
 
-  async function refreshSession(){
-    if (!currentSessionId) return;
-    await openSession(currentSessionId);
-  }
+}
 
-  async function newSessionFlow(){
-    const title = prompt("Tên session?", "TLMN - tối nay"); if (!title) return;
-    const p1 = prompt("Player 1 name?", "A"); if (!p1) return;
-    const p2 = prompt("Player 2 name?", "B"); if (!p2) return;
-    const p3 = prompt("Player 3 name?", "C"); if (!p3) return;
-    const p4 = prompt("Player 4 name?", "D"); if (!p4) return;
+buttons("first","first")
+buttons("second","second")
+buttons("third","third")
+buttons("last","last")
 
-    try{
-      const data = await api("/api/sessions", { method:"POST", body:{ title, currency:"VND", players:[p1,p2,p3,p4] } });
-      toast($("toastLeft"), "Created: " + data.session.id);
-      await loadSessions();
-      $("sessionSelect").value = data.session.id;
-      await openSession(data.session.id);
-    }catch(e){
-      toast($("toastLeft"), "Create session failed: " + e.message);
-    }
-  }
+buttons("cutCutter","cutter")
+buttons("cutVictim","victim")
 
-  function validateNormal(){
-    const a=$("firstPlayer").value, b=$("secondPlayer").value, c=$("thirdPlayer").value, d=$("lastPlayer").value;
-    if (new Set([a,b,c,d]).size !== 4) { toast($("toastRight"), "⚠️ NORMAL cần 4 hạng là 4 người khác nhau."); return false; }
-    return true;
-  }
+}
 
-  function validateKill(){
-    const killer = $("killKiller").value;
-    const victims = getSelectedVictims();
-    if (!victims.length) { toast($("toastRight"), "⚠️ KILL cần chọn ít nhất 1 victim."); return false; }
-    if (victims.includes(killer)) { toast($("toastRight"), "⚠️ Killer không được nằm trong victims."); return false; }
-    if (new Set(victims).size !== victims.length) { toast($("toastRight"), "⚠️ Victims bị trùng."); return false; }
+function set(k,v){
 
-    const remaining = currentSession.players.filter(p => p !== killer && !victims.includes(p));
-    if (remaining.length === 2) {
-      const s2 = $("killSecond").value;
-      const s3 = $("killThird").value;
-      if (!remaining.includes(s2) || !remaining.includes(s3) || s2 === s3) {
-        toast($("toastRight"), "⚠️ Chọn Nhì/Ba đúng 2 người còn lại.");
-        return false;
-      }
-    }
-    return true;
-  }
+roundData[k]=v
 
-  async function submitRound(){
-    if (!currentSessionId) return toast($("toastRight"), "Open a session first.");
-    if (currentSession?.is_locked) return toast($("toastRight"), "Session locked.");
+}
 
-    const mode = $("modeSelect").value;
+async function submitRound(){
 
-    if (mode === "NORMAL" && !validateNormal()) return;
-    if (mode === "KILL" && !validateKill()) return;
+await fetch(API+"/session/"+session+"/round",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(roundData)
+})
 
-    const note = $("roundNote").value;
-    let payload = { mode, note, cuts: pendingCuts };
+roundData={}
 
-    if (mode === "NORMAL") {
-      payload.first_player = $("firstPlayer").value;
-      payload.second_player = $("secondPlayer").value;
-      payload.third_player = $("thirdPlayer").value;
-      payload.last_player = $("lastPlayer").value;
-    } else if (mode === "WHITE") {
-      payload.white_winner = $("whiteWinner").value;
-      payload.cuts = [];
-    } else if (mode === "KILL") {
-      payload.killer = $("killKiller").value;
-      payload.victims = getSelectedVictims();
-      payload.second_player = $("killSecond").value || null;
-      payload.third_player = $("killThird").value || null;
-    }
+openSession(session)
 
-    try{
-      await api(`/api/sessions/${currentSessionId}/rounds`, { method:"POST", body: payload });
-      pendingCuts = [];
-      $("roundNote").value = "";
-      renderCuts();
-      toast($("toastRight"), "✅ Round submitted.");
-      await refreshSession();
-    }catch(e){
-      toast($("toastRight"), "Submit failed: " + e.message);
-    }
-  }
+}
 
-  async function endSession(){
-    if (!currentSessionId) return;
-    if (!confirm("End & lock this session?")) return;
-    try{
-      await api(`/api/sessions/${currentSessionId}/end`, { method:"POST" });
-      toast($("toastRight"), "✅ Session ended.");
-      await refreshSession();
-      await loadSessions();
-    }catch(e){
-      toast($("toastRight"), "End failed: " + e.message);
-    }
-  }
+async function cut(qty){
 
-  async function undoLast(){
-    if (!currentSessionId) return;
-    if (!confirm("Undo last round?")) return;
-    try{
-      const r = await api(`/api/sessions/${currentSessionId}/undo_last`, { method:"POST" });
-      toast($("toastRight"), r.undone ? `✅ Undone round #${r.idx}` : "Nothing to undo");
-      await refreshSession();
-    }catch(e){
-      toast($("toastRight"), "Undo failed: " + e.message);
-    }
-  }
+await fetch(API+"/session/"+session+"/cut",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
 
-  async function loadLedgerMore(){
-    if (!currentSessionId) return;
-    try{
-      const led = await api(`/api/sessions/${currentSessionId}/ledger?limit=200`);
-      renderLedger(led.items, currentSession.currency);
-      toast($("toastRight"), "Ledger loaded.");
-    }catch(e){
-      toast($("toastRight"), "Ledger failed: " + e.message);
-    }
-  }
+cutter:roundData.cutter,
+victim:roundData.victim,
+qty
 
-  function addCutWithQty(qty){
-    if (!currentSession) return toast($("toastRight"), "Open a session first.");
-    if ($("modeSelect").value === "WHITE") return toast($("toastRight"), "Cuts disabled in WHITE.");
-    const cutter = $("cutCutter").value;
-    const victim = $("cutVictim").value;
-    qty = Math.max(1, Number(qty || 1) | 0);
-    if (cutter === victim) return toast($("toastRight"), "Cutter and victim must differ.");
-    pendingCuts.push({ cutter, victim, qty });
-    renderCuts();
-  }
+})
+})
 
-  // Events
-  $("btnReload").onclick = async ()=>{ await health(); await loadSessions(); };
-  $("btnNewSession").onclick = newSessionFlow;
-  $("btnOpen").onclick = ()=>openSession($("sessionSelect").value);
-  $("btnRefresh").onclick = refreshSession;
-  $("btnSubmitRound").onclick = submitRound;
-  $("btnEnd").onclick = endSession;
-  $("btnUndo").onclick = undoLast;
-  $("btnLedger").onclick = loadLedgerMore;
+openSession(session)
 
-  $("modeSelect").onchange = ()=>{
-    const mode = $("modeSelect").value;
-    setModeUI(mode);
-    if (mode === "KILL") syncKillSecondThirdOptions();
-  };
+}
 
-  $("killKiller").onchange = ()=>syncKillSecondThirdOptions();
-  $("killVictims").onchange = ()=>syncKillSecondThirdOptions();
+function renderScores(bal){
 
-  $("btnAddCut").onclick = ()=> addCutWithQty($("cutQty").value);
-  $("btnCut1").onclick = ()=> addCutWithQty(1);
-  $("btnCut2").onclick = ()=> addCutWithQty(2);
-  $("btnCut3").onclick = ()=> addCutWithQty(3);
+scores.innerHTML=Object.entries(bal).map(([p,v])=>
 
-  $("btnClearCuts").onclick = ()=>{ pendingCuts = []; renderCuts(); };
+`<div class="score">
 
-  (async function init(){
-    renderCuts();
-    setModeUI("NORMAL");
-    await health();
-    await loadSessions();
-    renderRules();
-  })();
+<span>${p}</span>
+
+<span class="${v>=0?"pos":"neg"}">
+
+${fmt(v)}
+
+</span>
+
+</div>`
+
+).join("")
+
+}
+
+function renderRounds(r){
+
+rounds.innerHTML=r.map(i=>
+
+`<div class="round">
+
+#${i.idx}
+${i.first_player}
+>
+${i.second_player}
+>
+${i.third_player}
+>
+${i.last_player}
+
+</div>`
+
+).join("")
+
+}
+
+loadSessions()
+
 </script>
+
 </body>
 </html>
