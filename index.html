@@ -11,10 +11,16 @@
       --danger:#ff5a67; --ok:#34d399; --warn:#facc15;
       --r:16px; --shadow:0 20px 60px rgba(0,0,0,.45);
 
-      /* custom semantic colors requested */
+      /* value colors */
       --zero-color:#facc15;   /* vàng */
-      --plus-color:#a855f7;   /* tím */
-      --minus-color:#ff5a67;
+      --plus-color:#34d399;   /* xanh lá */
+      --minus-color:#ff5a67;  /* đỏ */
+
+      /* leaderboard rank colors */
+      --rank1-color:#a855f7;  /* tím */
+      --rank2-color:#34d399;  /* xanh lá */
+      --rank3-color:#facc15;  /* vàng */
+      --rank4-color:#ff5a67;  /* đỏ */
 
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
@@ -66,6 +72,11 @@
     .pos{ color:var(--plus-color); font-weight:900; }
     .neg{ color:var(--minus-color); font-weight:900; }
     .zero{ color:var(--zero-color); font-weight:900; }
+
+    .rank1{ color:var(--rank1-color); font-weight:900; }
+    .rank2{ color:var(--rank2-color); font-weight:900; }
+    .rank3{ color:var(--rank3-color); font-weight:900; }
+    .rank4{ color:var(--rank4-color); font-weight:900; }
 
     .muted{ color:var(--muted); }
     .toast{ margin-top:10px; font-size:12px; color:var(--muted); }
@@ -289,8 +300,7 @@
 </div>
 
 <script>
-  // ✅ MUST SET to your real Worker domain
-  const API_BASE = "https://tienlen.testmail12071997.workers.dev"; // <-- change this
+  const API_BASE = "https://tienlen.testmail12071997.workers.dev";
   const $ = (id)=>document.getElementById(id);
 
   $("pillApi").textContent = "API: " + API_BASE.replace(/^https?:\/\//,"");
@@ -307,6 +317,13 @@
     if (n === 0) return "zero";
     if (n > 0) return "pos";
     return "neg";
+  }
+
+  function getRankClass(rankIndex){
+    if (rankIndex === 0) return "rank1";
+    if (rankIndex === 1) return "rank2";
+    if (rankIndex === 2) return "rank3";
+    return "rank4";
   }
 
   async function api(path, {method="GET", body=null}={}){
@@ -375,12 +392,18 @@
   function renderLeaderboard(balances, players, currency){
     const arr = players.map(p=>({ p, net: Number(balances?.[p]||0) }))
       .sort((a,b)=>b.net-a.net);
-    const leader = arr[0]?.p;
-    const rows = arr.map(x=>{
-      const cls = getValueClass(x.net);
-      const crown = x.p===leader ? `<span class="crown">👑</span>` : "";
-      return `<tr><td class="k">${crown}<b>${x.p}</b></td><td class="${cls}">${fmt(x.net, currency)}</td></tr>`;
+
+    const rows = arr.map((x,i)=>{
+      const cls = getRankClass(i);
+      const crown = i===0 ? `<span class="crown">👑</span>` : "";
+      return `
+        <tr>
+          <td class="k">${crown}<b>${x.p}</b></td>
+          <td class="${cls}">${fmt(x.net, currency)}</td>
+        </tr>
+      `;
     }).join("");
+
     $("leaderBox").innerHTML = `
       <table>
         <thead><tr><th>Player</th><th>Net</th></tr></thead>
@@ -389,7 +412,6 @@
     `;
   }
 
-  // ✅ 4 columns stats: Player | Net | Score | +/-
   function renderStats(balances, players, currency, scoreByPlayer){
     const rows = players.map(p=>{
       const net = Number(balances?.[p] || 0);
@@ -718,7 +740,6 @@
     renderCuts();
   }
 
-  // Events
   $("btnReload").onclick = async ()=>{ await health(); await loadSessions(); };
   $("btnNewSession").onclick = newSessionFlow;
   $("btnOpen").onclick = ()=>openSession($("sessionSelect").value);
