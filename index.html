@@ -153,11 +153,6 @@
 
         <div class="hr"></div>
 
-        <div class="ttl">Leaderboard</div>
-        <div id="leaderBox" class="muted" style="margin-top:10px;">—</div>
-
-        <div class="hr"></div>
-
         <div class="ttl">Tournament stats</div>
         <div id="statsBox" class="muted" style="margin-top:10px;">—</div>
       </div>
@@ -172,7 +167,7 @@
       <div class="bd">
         <div class="row" style="justify-content:space-between; align-items:center;">
           <div>
-            <div class="ttl">Balances</div>
+            <div class="ttl">Leaderboard</div>
             <div class="sub muted" id="playersLine"></div>
           </div>
           <div class="row">
@@ -181,7 +176,7 @@
           </div>
         </div>
 
-        <div style="margin-top:10px;" id="balancesBox"></div>
+        <div style="margin-top:10px;" id="leaderBox" class="muted">—</div>
 
         <div class="hr"></div>
 
@@ -374,20 +369,6 @@
     pendingCuts.splice(i,1);
     renderCuts();
   };
-
-  function renderBalances(balances, players, currency){
-    const rows = players.map(p=>{
-      const b = Number(balances?.[p] || 0);
-      const cls = getValueClass(b);
-      return `<tr><td>${p}</td><td class="${cls}">${fmt(b, currency)}</td></tr>`;
-    }).join("");
-    $("balancesBox").innerHTML = `
-      <table>
-        <thead><tr><th>Player</th><th>Net</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-  }
 
   function renderLeaderboard(balances, players, currency){
     const arr = players.map(p=>({ p, net: Number(balances?.[p]||0) }))
@@ -582,7 +563,6 @@
       $("playersLine").textContent = "Players: " + currentSession.players.join(" • ");
       setPlayerOptions(currentSession.players);
 
-      renderBalances(data.balances, currentSession.players, currentSession.currency);
       renderLeaderboard(data.balances, currentSession.players, currentSession.currency);
       renderStats(data.balances, currentSession.players, currentSession.currency, data.scoreByPlayer);
       renderRounds(data.rounds);
