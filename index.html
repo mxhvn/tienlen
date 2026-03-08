@@ -10,6 +10,12 @@
       --text:#eaf0ff; --muted:rgba(234,240,255,.70);
       --danger:#ff5a67; --ok:#34d399; --warn:#facc15;
       --r:16px; --shadow:0 20px 60px rgba(0,0,0,.45);
+
+      /* custom semantic colors requested */
+      --zero-color:#facc15;   /* vàng */
+      --plus-color:#a855f7;   /* tím */
+      --minus-color:#60a5fa;  /* xanh da trời */
+
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
     body{ margin:0; background:
@@ -57,8 +63,10 @@
     th{ color:var(--muted); font-weight:800; text-align:left; }
     tr:hover td{ background: rgba(255,255,255,.03); }
 
-    .pos{ color:var(--ok); font-weight:900; }
-    .neg{ color:var(--danger); font-weight:900; }
+    .pos{ color:var(--plus-color); font-weight:900; }
+    .neg{ color:var(--minus-color); font-weight:900; }
+    .zero{ color:var(--zero-color); font-weight:900; }
+
     .muted{ color:var(--muted); }
     .toast{ margin-top:10px; font-size:12px; color:var(--muted); }
     .hr{ height:1px; background:rgba(255,255,255,.08); margin:12px 0; }
@@ -288,9 +296,17 @@
   $("pillApi").textContent = "API: " + API_BASE.replace(/^https?:\/\//,"");
 
   function toast(el, msg){ el.textContent = msg; }
+
   function fmt(n, currency="VND"){
     const v = Number(n||0);
     return v.toLocaleString("vi-VN") + " " + currency;
+  }
+
+  function getValueClass(value){
+    const n = Number(value || 0);
+    if (n === 0) return "zero";
+    if (n > 0) return "pos";
+    return "neg";
   }
 
   async function api(path, {method="GET", body=null}={}){
@@ -336,6 +352,7 @@
       </div>
     `).join("");
   }
+
   window.removeCut = (i)=>{
     pendingCuts.splice(i,1);
     renderCuts();
@@ -344,7 +361,7 @@
   function renderBalances(balances, players, currency){
     const rows = players.map(p=>{
       const b = Number(balances?.[p] || 0);
-      const cls = b >= 0 ? "pos" : "neg";
+      const cls = getValueClass(b);
       return `<tr><td>${p}</td><td class="${cls}">${fmt(b, currency)}</td></tr>`;
     }).join("");
     $("balancesBox").innerHTML = `
@@ -360,7 +377,7 @@
       .sort((a,b)=>b.net-a.net);
     const leader = arr[0]?.p;
     const rows = arr.map(x=>{
-      const cls = x.net >= 0 ? "pos":"neg";
+      const cls = getValueClass(x.net);
       const crown = x.p===leader ? `<span class="crown">👑</span>` : "";
       return `<tr><td class="k">${crown}<b>${x.p}</b></td><td class="${cls}">${fmt(x.net, currency)}</td></tr>`;
     }).join("");
@@ -376,17 +393,20 @@
   function renderStats(balances, players, currency, scoreByPlayer){
     const rows = players.map(p=>{
       const net = Number(balances?.[p] || 0);
-      const netCls = net >= 0 ? "pos" : "neg";
+      const netCls = getValueClass(net);
+
       const score = Number(scoreByPlayer?.[p] || 0);
-      const sign = score >= 0 ? "+" : "-";
+      const scoreCls = getValueClass(score);
+
+      const sign = score > 0 ? "+" : score < 0 ? "-" : "±";
       const abs = Math.abs(score);
-      const signCls = score >= 0 ? "pos" : "neg";
+
       return `
         <tr>
           <td><b>${p}</b></td>
           <td class="${netCls}">${fmt(net, currency)}</td>
-          <td class="${signCls}">${score}</td>
-          <td class="${signCls}">${sign}${abs}</td>
+          <td class="${scoreCls}">${score}</td>
+          <td class="${scoreCls}">${sign}${abs}</td>
         </tr>
       `;
     }).join("");
@@ -440,7 +460,7 @@
   function renderLedger(items, currency){
     if (!items?.length){ $("ledgerBox").textContent = "—"; return; }
     $("ledgerBox").innerHTML = items.slice(0, 30).map(x=>{
-      const cls = Number(x.delta)>=0 ? "pos" : "neg";
+      const cls = getValueClass(x.delta);
       const t = new Date(x.created_at).toLocaleTimeString("vi-VN");
       return `<div class="roundline">
         ${t} • <b>${x.player}</b> <span class="${cls}">${fmt(x.delta, currency)}</span>
@@ -474,7 +494,7 @@
     if (!currentSession) return;
     const killer = $("killKiller").value;
     const victims = getSelectedVictims();
-    const remaining = currentSession.players.filter(p => p !== killer && !victims.includes(p)); // 0..2
+    const remaining = currentSession.players.filter(p => p !== killer && !victims.includes(p));
 
     const s2 = $("killSecond");
     const s3 = $("killThird");
