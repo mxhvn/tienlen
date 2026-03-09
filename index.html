@@ -16,11 +16,8 @@
       --plus-color:#34d399;   /* xanh lá */
       --minus-color:#ff5a67;  /* đỏ */
 
-      /* leaderboard rank colors */
-      --rank1-color:#a855f7;  /* tím */
-      --rank2-color:#34d399;  /* xanh lá */
-      --rank3-color:#facc15;  /* vàng */
-      --rank4-color:#ff5a67;  /* đỏ */
+      /* leaderboard special colors */
+      --leader-color:#a855f7; /* tím cho người đứng đầu nếu không âm/không bằng 0 */
 
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
@@ -72,11 +69,7 @@
     .pos{ color:var(--plus-color); font-weight:900; }
     .neg{ color:var(--minus-color); font-weight:900; }
     .zero{ color:var(--zero-color); font-weight:900; }
-
-    .rank1{ color:var(--rank1-color); font-weight:900; }
-    .rank2{ color:var(--rank2-color); font-weight:900; }
-    .rank3{ color:var(--rank3-color); font-weight:900; }
-    .rank4{ color:var(--rank4-color); font-weight:900; }
+    .leader{ color:var(--leader-color); font-weight:900; }
 
     .muted{ color:var(--muted); }
     .toast{ margin-top:10px; font-size:12px; color:var(--muted); }
@@ -314,11 +307,16 @@
     return "neg";
   }
 
-  function getRankClass(rankIndex){
-    if (rankIndex === 0) return "rank1";
-    if (rankIndex === 1) return "rank2";
-    if (rankIndex === 2) return "rank3";
-    return "rank4";
+  function getLeaderboardClass(net, index){
+    const n = Number(net || 0);
+
+    // ưu tiên màu theo giá trị âm/0 trước
+    if (n < 0) return "neg";
+    if (n === 0) return "zero";
+
+    // còn lại là số dương
+    if (index === 0) return "leader";
+    return "pos";
   }
 
   async function api(path, {method="GET", body=null}={}){
@@ -375,7 +373,7 @@
       .sort((a,b)=>b.net-a.net);
 
     const rows = arr.map((x,i)=>{
-      const cls = getRankClass(i);
+      const cls = getLeaderboardClass(x.net, i);
       const crown = i===0 ? `<span class="crown">👑</span>` : "";
       return `
         <tr>
